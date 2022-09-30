@@ -3,7 +3,6 @@ import { Route, Routes } from "react-router-dom";
 import { Loading } from "./components";
 import { ROUTES } from './interfaces/enums';
 
-
 const NotFound = lazy(() => import("./pages/not-found/NotFound"));
 const AuthLayout = lazy(() => import("./pages/auth/AuthLayout"));
 const SignIn = lazy(() => import("./pages/auth/SignIn"));

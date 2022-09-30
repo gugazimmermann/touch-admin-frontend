@@ -3,9 +3,7 @@ import { GenericObject } from '../interfaces/types';
 
 const cryptoSecret = process.env.REACT_APP_CRYPTO_SECRECT || '123'
 
-const Encode = (data: string): string => {
-	return CryptoJS.AES.encrypt(data, cryptoSecret).toString();
-}
+const Encode = (data: string): string => CryptoJS.AES.encrypt(data, cryptoSecret).toString();
 
 const Decode = (data: string): GenericObject | null => {
 	if (data) {

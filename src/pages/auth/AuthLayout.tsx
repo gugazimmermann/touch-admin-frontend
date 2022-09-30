@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { useCookies } from "react-cookie";
+import Cookies from 'universal-cookie';
 import LogoIcon from "../../images/LogoIcon";
 import { AlertType } from "../../interfaces/types";
 import { Alert, Loading, Title } from "../../components";
@@ -9,6 +9,7 @@ import { COOKIES } from "../../helpers";
 import { ALERT, ROUTES } from '../../interfaces/enums';
 
 const projectName = process.env.REACT_APP_TITLE || "Touch Sistemas";
+const cookies = new Cookies();
 
 export default function AuthLayout() {
   const navigate = useNavigate();
@@ -16,7 +17,6 @@ export default function AuthLayout() {
   const [title, setTitle] = useState<string>("");
   const [alert, setAlert] = useState<AlertType>({});
   const [loading, setLoading] = useState(false);
-  const [cookies, setCookie] = useCookies([COOKIES.NAME]);
 
   const startLoading = () => {
     setLoading(true);
@@ -28,18 +28,18 @@ export default function AuthLayout() {
     setAlert({});
   };
 
-  const setClientCookie = (email: string, sub: string) => {
-    const encodedContent = COOKIES.Encode(JSON.stringify({ email, sub }));
+  const setClientCookie = (email: string, sub: string, idToken: string) => {
+    const encodedContent = COOKIES.Encode(JSON.stringify({ email, sub, idToken }));
     const date = new Date();
     date.setDate(date.getDate() + 365);
-    setCookie(COOKIES.NAME, encodedContent, { expires: date, path: "/" });
+    cookies.set(COOKIES.NAME, encodedContent, { expires: date, path: "/" });
   };
 
   const signIn = async (email: string, pwd: string, remember: boolean) => {
     startLoading();
     try {
       const attributes = await Auth.SignIn(email, pwd, remember);
-      setClientCookie(attributes.email, attributes.sub);
+      setClientCookie(attributes.email, attributes.sub, attributes.idToken);
       stopLoading();
       navigate(ROUTES.HOME);
     } catch (err) {
@@ -170,8 +170,8 @@ export default function AuthLayout() {
 
   const loadUser = useCallback(async () => {
     setLoading(true);
-    const getCookie = COOKIES.Decode(cookies[COOKIES.NAME]);
-    if (getCookie?.email) {
+    const getCookie = COOKIES.Decode(cookies.get(COOKIES.NAME));
+    if (getCookie?.email && getCookie?.idToken) {
       try {
         const getUser = await Auth.GetUser();
         if (getUser.sub === getCookie.sub) navigate(ROUTES.HOME);
