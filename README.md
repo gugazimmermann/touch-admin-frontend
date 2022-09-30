@@ -15,3 +15,16 @@ IMPORTANT NOTE: `./amplify` was added to `.gitignore`, this way every new build 
 * `amplify import auth` and choose **Cognito User Pool only**, select the created userPool from the backend output;
 * run `amplify push` to import the cognito info
 * run `npm start` to run the react app
+
+## How to Deploy
+
+* run `amplify add hosting` and select **Amazon CloudFront and S3** and **PROD (S3 with CloudFront using HTTPS**
+* run `amplify push`
+* run `amplify publish`
+
+The output will be similar to this one:
+
+```bash
+Your app is published successfully.
+https://d1aewi60iom71h.cloudfront.net
+```
