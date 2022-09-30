@@ -29,6 +29,7 @@ export type CognitoUserType = {
   email_verified: boolean;
   locale: string;
   email: string;
+  idToken: string;
 };
 
 export type GenericObject = { [key: string]: any };

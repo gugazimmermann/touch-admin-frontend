@@ -18,7 +18,7 @@ const SignIn = async (email: string, pwd: string, remember: boolean): Promise<Co
   if (auth.challengeName === "NEW_PASSWORD_REQUIRED") await AmplifyAuth.completeNewPassword(auth, pwd);
   if (remember) await AmplifyAuth.rememberDevice();
   else await AmplifyAuth.forgetDevice();
-  return auth.attributes;
+  return {...auth.attributes, idToken: auth.signInUserSession.idToken.jwtToken};
 };
 
 const ForgotPassword = async (email: string): Promise<void> => {
