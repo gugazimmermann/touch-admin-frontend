@@ -1,25 +1,31 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { lazy, Suspense } from "react";
+import { Route, Routes } from "react-router-dom";
+import { Loading } from "./components";
+import { ROUTES } from './interfaces/enums';
+
+
+const NotFound = lazy(() => import("./pages/not-found/NotFound"));
+const AuthLayout = lazy(() => import("./pages/auth/AuthLayout"));
+const SignIn = lazy(() => import("./pages/auth/SignIn"));
+const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
+const RedefinePassword = lazy(() => import("./pages/auth/RedefinePassword"));
+const SignUp = lazy(() => import("./pages/auth/SignUp"));
+const ConfirmSignUp = lazy(() => import("./pages/auth/ConfirmSignUp"));
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Suspense fallback={<Loading />}>
+      <Routes>
+        <Route element={<AuthLayout />}>
+          <Route path={ROUTES.SIGNIN} element={<SignIn />} />
+          <Route path={ROUTES.FORGOTPASSWORD} element={<ForgotPassword />} />
+          <Route path={ROUTES.REDEFINEPASSWORD} element={<RedefinePassword />} />
+          <Route path={ROUTES.SIGNUP} element={<SignUp />} />
+          <Route path={ROUTES.CONFIRMSIGNUP} element={<ConfirmSignUp />} />
+        </Route>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 }
 
