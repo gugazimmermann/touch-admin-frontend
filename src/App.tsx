@@ -12,6 +12,9 @@ const RedefinePassword = lazy(() => import("./pages/auth/RedefinePassword"));
 const SignUp = lazy(() => import("./pages/auth/SignUp"));
 const ConfirmSignUp = lazy(() => import("./pages/auth/ConfirmSignUp"));
 
+const Layout = lazy(() => import("./pages/layout/Layout"));
+const Home = lazy(() => import("./pages/home/Home"));
+
 function App() {
   return (
     <Suspense fallback={<Loading />}>
@@ -22,6 +25,9 @@ function App() {
           <Route path={ROUTES.REDEFINEPASSWORD} element={<RedefinePassword />} />
           <Route path={ROUTES.SIGNUP} element={<SignUp />} />
           <Route path={ROUTES.CONFIRMSIGNUP} element={<ConfirmSignUp />} />
+        </Route>
+        <Route element={<Layout />}>
+          <Route path={ROUTES.HOME} element={<Home />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
