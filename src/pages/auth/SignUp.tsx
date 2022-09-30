@@ -9,7 +9,7 @@ import Image from "../../images/auth/SignUp.svg";
 
 export default function SignUp() {
   const location: LocationType = useLocation();
-  const { setAlert, setImage, setTitle }: useOutletContextProps = useOutletContext();
+  const { setAlert, setImage, setTitle, signUp }: useOutletContextProps = useOutletContext();
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
   const [repeat, setRepeat] = useState("");
@@ -33,7 +33,7 @@ export default function SignUp() {
       <div className="mb-4">
         <Input
           type="email"
-          placeholder="ERmail"
+          placeholder="Email"
           value={email}
           handler={(e) => setEmail(e.target.value)}
         />
@@ -59,7 +59,7 @@ export default function SignUp() {
         <Button
           text="Cadastrar"
           disabled={disabled()}
-          handler={() => {}}
+          handler={() => signUp(email, pwd)}
           full
         />
       </div>

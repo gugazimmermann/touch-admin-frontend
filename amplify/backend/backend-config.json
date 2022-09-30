@@ -1,0 +1,11 @@
+{
+  "auth": {
+    "touchadminfrontend999badba": {
+      "service": "Cognito",
+      "serviceType": "imported",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false
+    }
+  }
+}

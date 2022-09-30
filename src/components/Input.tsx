@@ -61,12 +61,12 @@ const Input = ({
           <ul
             className={`${
               tooltip ? "flex" : "hidden"
-            } flex-col text-left absolute -right-8 top-2 -translate-y-full w-48 px-2 py-1 bg-slate-700 text-slate-200 rounded-lg text-sm`}
+            } flex-col text-left absolute -right-8 top-2 -translate-y-full w-56 px-2 py-1 bg-slate-700 text-slate-200 rounded-lg text-sm`}
           >
             <li>Mínimo 6 caracteres</li>
-            <li>Deve conter pelo menos 1 número</li>
-            <li>Deve conter pelo menos 1 letra maiúscula</li>
-            <li>Deve conter pelo menos 1 letra minúscula</li>
+            <li>Pelo menos 1 número</li>
+            <li>Pelo menos 1 letra maiúscula</li>
+            <li>Pelo menos 1 letra minúscula</li>
           </ul>
         </>
       )}

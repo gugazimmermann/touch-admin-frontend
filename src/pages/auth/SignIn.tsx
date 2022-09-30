@@ -7,7 +7,7 @@ import Image from "../../images/auth/SignIn.svg";
 import { ROUTES } from '../../interfaces/enums';
 
 export default function SignIn() {
-  const { setAlert, setImage, setTitle }: useOutletContextProps = useOutletContext();
+  const { setAlert, setImage, setTitle, signIn }: useOutletContextProps = useOutletContext();
   const location: LocationType = useLocation();
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
@@ -51,7 +51,7 @@ export default function SignIn() {
         <Button
           text="Entrar"
           disabled={disabled()}
-          handler={() => {}}
+          handler={() => signIn(email, pwd, remember)}
           full
         />
       </div>

@@ -8,7 +8,7 @@ import Image from "../../images/auth/RedefinePassword.svg";
 
 export default function RedefinePassword() {
   const location: LocationType = useLocation();
-  const { setAlert, setImage, setTitle }: useOutletContextProps = useOutletContext();
+  const { setAlert, setImage, setTitle, redefinePassword }: useOutletContextProps = useOutletContext();
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState(location.state?.email || "");
   const [code, setCode] = useState("");
@@ -75,7 +75,7 @@ export default function RedefinePassword() {
         <Button
           text="Redefinir Senha"
           disabled={disabled()}
-          handler={() => {}}
+          handler={() => redefinePassword(email, code, pwd)}
           full
         />
       </div>

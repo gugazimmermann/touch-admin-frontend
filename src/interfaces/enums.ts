@@ -4,6 +4,7 @@ export enum ROUTES {
   REDEFINEPASSWORD = "/redefinir-senha",
   SIGNUP = "/cadastrar",
   CONFIRMSIGNUP = "/confirmar-cadastro",
+  HOME = "/home"
 }
 
 export enum ALERT {

@@ -8,7 +8,7 @@ import Image from "../../images/auth/ConfirmSignUp.svg";
 
 export default function ConfirmSignUp() {
   const location: LocationType = useLocation();
-  const { setAlert, setImage, setTitle }: useOutletContextProps = useOutletContext();
+  const { setAlert, setImage, setTitle, resendConfirmationCode, confirmSignUp }: useOutletContextProps = useOutletContext();
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState(location.state?.email || "");
   const [code, setCode] = useState("");
@@ -47,7 +47,7 @@ export default function ConfirmSignUp() {
         />
       </div>
       <div className="mb-4 flex justify-end duration-200 transition ease-in-out">
-        <button type="button" onClick={() => {}}>
+        <button type="button" onClick={() => resendConfirmationCode(email)}>
           Re-Enviar Código
         </button>
       </div>
@@ -55,7 +55,7 @@ export default function ConfirmSignUp() {
         <Button
           text="Confirmar Cadastro"
           disabled={disabled()}
-          handler={() => {}}
+          handler={() => confirmSignUp(email, code)}
           full
         />
       </div>

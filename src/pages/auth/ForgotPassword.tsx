@@ -8,7 +8,7 @@ import Image from "../../images/auth/ForgorPassword.svg";
 
 export default function ForgorPassword() {
   const location: LocationType = useLocation();
-  const { setAlert, setImage, setTitle }: useOutletContextProps = useOutletContext();
+  const { setAlert, setImage, setTitle, sendForgotPasswordCode }: useOutletContextProps = useOutletContext();
   const [email, setEmail] = useState("");
 
   useEffect(
@@ -34,7 +34,7 @@ export default function ForgorPassword() {
         <Button
           text="Enviar Código"
           disabled={disabled()}
-          handler={() => {}}
+          handler={() => sendForgotPasswordCode(email)}
           full
         />
       </div>
