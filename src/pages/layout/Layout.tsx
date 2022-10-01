@@ -1,15 +1,18 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import Cookies from 'universal-cookie';
 import { Outlet, useNavigate } from "react-router-dom";
 import Auth from "../../api/auth";
 import { Footer, Loading, Nav } from "../../components";
 import { COOKIES } from "../../helpers";
-import { ROUTES } from '../../interfaces/enums';
+import { CONTEXT, ROUTES } from '../../interfaces/enums';
 import ProfileAPI from "../../api/profile";
+import { AppContext } from "../../context";
+import { ProfileType } from "../../interfaces/types";
 
 const cookies = new Cookies();
 
 export default function Layout() {
+  const { dispatch } = useContext(AppContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -19,18 +22,21 @@ export default function Layout() {
     navigate(ROUTES.SIGNIN);
   }, [navigate]);
 
-  const seeFirstAccess = async () => {
-    let res = await ProfileAPI.getCurrentUser();
-    if (!res.profileID) res = await ProfileAPI.postCurrentUser();
+  const seeProfile = async (): Promise<ProfileType> => {
+    let profile = await ProfileAPI.getCurrentUser();
+    // first access, add profile to DynamoDB
+    if (!profile.profileID) profile = await ProfileAPI.postCurrentUser();
+    return profile
   }
 
   const loadClient = useCallback(async () => {
     setLoading(true);
     const getCookie = COOKIES.Decode(cookies.get(COOKIES.NAME));
     if (!getCookie?.sub) navigate(ROUTES.SIGNIN);
-    await seeFirstAccess();
+    const profile = await seeProfile();
+    dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: profile})
     setLoading(false);
-  }, [navigate]);
+  }, [dispatch, navigate]);
 
   useEffect(() => {
     loadClient();

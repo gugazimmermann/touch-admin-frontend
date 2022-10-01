@@ -2,6 +2,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { Amplify } from "aws-amplify";
 import awsExports from "./aws-exports";
+import { AppProvider } from "./context";
 import App from "./App";
 import "./index.css";
 
@@ -12,7 +13,8 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <BrowserRouter>
-    <App />
+    <AppProvider>
+      <App />
+    </AppProvider>
   </BrowserRouter>
 );
-
