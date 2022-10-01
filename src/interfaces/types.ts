@@ -26,7 +26,7 @@ export type LocationType = {
 
 export type CognitoUserType = {
   sub: string;
-  email_verified: boolean;
+  email_verified?: boolean;
   locale: string;
   email: string;
   idToken: string;

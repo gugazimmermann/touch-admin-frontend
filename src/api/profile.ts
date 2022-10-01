@@ -1,17 +1,24 @@
+import Cookies from 'universal-cookie';
+import { COOKIES } from '../helpers';
 import { ProfileType } from '../interfaces/types';
-import AxiosInstance from './index';
+import AxiosInstance from "./index";
 
-export const post = async (profile: ProfileType) => {
-  const { data } = await AxiosInstance.post("profiles", profile);
-  console.log(data);
- return data
+const cookies = new Cookies();
+const getCookie = COOKIES.Decode(cookies.get(COOKIES.NAME));
+
+export const getCurrentUser = async (): Promise<ProfileType> => {
+  const { data } = await AxiosInstance.get("profiles/" + getCookie.sub);
+  return data.data;
+};
+
+export const postCurrentUser =async (): Promise<ProfileType> => {
+  const { data } = await AxiosInstance.post("profiles", {
+    profileID: getCookie.sub,
+    email: getCookie.email
+  });
+  return data.data;
 }
 
-export const getAll = async () => {
-  const { data } = await AxiosInstance.get("profiles");
- return data
-}
-
-const ProfileAPI = { post, getAll };
+const ProfileAPI = { getCurrentUser, postCurrentUser };
 
 export default ProfileAPI;

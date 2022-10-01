@@ -5,6 +5,7 @@ import Auth from "../../api/auth";
 import { Footer, Loading, Nav } from "../../components";
 import { COOKIES } from "../../helpers";
 import { ROUTES } from '../../interfaces/enums';
+import ProfileAPI from "../../api/profile";
 
 const cookies = new Cookies();
 
@@ -18,10 +19,16 @@ export default function Layout() {
     navigate(ROUTES.SIGNIN);
   }, [navigate]);
 
+  const seeFirstAccess = async () => {
+    let res = await ProfileAPI.getCurrentUser();
+    if (!res.profileID) res = await ProfileAPI.postCurrentUser();
+  }
+
   const loadClient = useCallback(async () => {
     setLoading(true);
     const getCookie = COOKIES.Decode(cookies.get(COOKIES.NAME));
-    if (!getCookie?.email) navigate(ROUTES.SIGNIN);
+    if (!getCookie?.sub) navigate(ROUTES.SIGNIN);
+    await seeFirstAccess();
     setLoading(false);
   }, [navigate]);
 

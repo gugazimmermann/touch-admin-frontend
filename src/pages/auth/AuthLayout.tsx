@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import Cookies from 'universal-cookie';
-import { v4 as uuidv4 } from 'uuid';
+import Cookies from "universal-cookie";
 import LogoIcon from "../../images/LogoIcon";
-import { AlertType } from "../../interfaces/types";
+import { AlertType, CognitoUserType } from '../../interfaces/types';
 import { Alert, Loading, Title } from "../../components";
 import Auth from "../../api/auth";
 import { COOKIES } from "../../helpers";
-import { ALERT, ROUTES } from '../../interfaces/enums';
-import ProfileAPI from "../../api/profile";
+import { ALERT, ROUTES } from "../../interfaces/enums";
 
 const projectName = process.env.REACT_APP_TITLE || "Touch Sistemas";
 const cookies = new Cookies();
@@ -30,8 +28,9 @@ export default function AuthLayout() {
     setAlert({});
   };
 
-  const setClientCookie = (email: string, sub: string, idToken: string) => {
-    const encodedContent = COOKIES.Encode(JSON.stringify({ email, sub, idToken }));
+  const setClientCookie = ({sub, locale, email, idToken}: CognitoUserType) => {
+    cookies.remove(COOKIES.NAME);
+    const encodedContent = COOKIES.Encode(JSON.stringify({ sub, locale, email, idToken }));
     const date = new Date();
     date.setDate(date.getDate() + 365);
     cookies.set(COOKIES.NAME, encodedContent, { expires: date, path: "/" });
@@ -41,14 +40,14 @@ export default function AuthLayout() {
     startLoading();
     try {
       const attributes = await Auth.SignIn(email, pwd, remember);
-      setClientCookie(attributes.email, attributes.sub, attributes.idToken);
+      setClientCookie(attributes);
       stopLoading();
       navigate(ROUTES.HOME);
     } catch (err) {
       stopLoading();
       setAlert({
         type: ALERT.ERROR,
-        text: "Desculpe, não foi possível fazer login"
+        text: "Desculpe, não foi possível fazer login",
       });
     }
   };
@@ -63,7 +62,7 @@ export default function AuthLayout() {
           email,
           alert: {
             type: ALERT.INFO,
-            text: "Verifique seu e-mail"
+            text: "Verifique seu e-mail",
           },
         },
       });
@@ -71,7 +70,7 @@ export default function AuthLayout() {
       stopLoading();
       setAlert({
         type: ALERT.ERROR,
-        text: "Não foi possível enviar o código, o email está correto?"
+        text: "Não foi possível enviar o código, o email está correto?",
       });
     }
   };
@@ -86,7 +85,7 @@ export default function AuthLayout() {
           email,
           alert: {
             type: ALERT.SUCCESS,
-            text: "Senha alterada com sucesso!"
+            text: "Senha alterada com sucesso!",
           },
         },
       });
@@ -94,7 +93,7 @@ export default function AuthLayout() {
       stopLoading();
       setAlert({
         type: ALERT.ERROR,
-        text: "Não foi possível redefinir a senha, e-mail, código para nova senha está errado!"
+        text: "Não foi possível redefinir a senha, e-mail, código para nova senha está errado!",
       });
     }
   };
@@ -103,15 +102,14 @@ export default function AuthLayout() {
     startLoading();
     try {
       // we'll use just pt-BR for now
-      await Auth.SignUp(email, pwd, 'pt-BR');
-      await ProfileAPI.post({email, profileID: uuidv4()})
+      await Auth.SignUp(email, pwd, "pt-BR");
       stopLoading();
       navigate(ROUTES.CONFIRMSIGNUP, {
         state: {
           email,
           alert: {
             type: ALERT.INFO,
-            text: "Verifique seu e-mail"
+            text: "Verifique seu e-mail",
           },
         },
       });
@@ -119,7 +117,7 @@ export default function AuthLayout() {
       stopLoading();
       setAlert({
         type: ALERT.ERROR,
-        text: "Não foi possível cadastrar, e-mail, código ou nova senha estão errados!"
+        text: "Não foi possível cadastrar, e-mail, código ou nova senha estão errados!",
       });
     }
   };
@@ -134,7 +132,7 @@ export default function AuthLayout() {
           email,
           alert: {
             type: ALERT.SUCCESS,
-            text: "Código reenviado, verifique seu e-mail"
+            text: "Código reenviado, verifique seu e-mail",
           },
         },
       });
@@ -142,7 +140,7 @@ export default function AuthLayout() {
       stopLoading();
       setAlert({
         type: ALERT.ERROR,
-        text: "Não foi possível enviar o código, o email está correto?"
+        text: "Não foi possível enviar o código, o email está correto?",
       });
     }
   };
@@ -157,7 +155,7 @@ export default function AuthLayout() {
           email,
           alert: {
             type: ALERT.SUCCESS,
-            text: "Confirmação bem sucedida!"
+            text: "Confirmação bem sucedida!",
           },
         },
       });
@@ -165,7 +163,7 @@ export default function AuthLayout() {
       stopLoading();
       setAlert({
         type: ALERT.ERROR,
-        text: "Não foi possível confirmar o cadastro, e-mail ou código estão errados!"
+        text: "Não foi possível confirmar o cadastro, e-mail ou código estão errados!",
       });
     }
   };
@@ -183,12 +181,12 @@ export default function AuthLayout() {
       }
     }
     setLoading(false);
-  }, [cookies, navigate]);
+  }, [navigate]);
 
   useEffect(() => {
     loadUser();
   }, [loadUser]);
-  
+
   return (
     <main className="h-screen mx-auto">
       {loading && <Loading />}
