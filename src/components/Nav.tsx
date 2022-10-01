@@ -1,10 +1,9 @@
 import { ReactElement, useContext } from "react";
 import { Link } from "react-router-dom";
+import { NavAlert, NavInfo } from ".";
 import { AppContext } from "../context";
 import LogoIcon from "../images/LogoIcon";
 import { ROUTES } from "../interfaces/enums";
-import NavAlert from "./NavAlert";
-import NavInfo from "./NavInfo";
 import NavProfile from "./NavProfile";
 
 const projectName = process.env.REACT_APP_TITLE || "Touch Sistemas";

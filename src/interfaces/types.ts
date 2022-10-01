@@ -1,4 +1,4 @@
-import { ALERT } from "./enums";
+import { ALERT, MapTypes } from "./enums";
 
 export type AlertType = {
   type?: ALERT;
@@ -15,6 +15,11 @@ export type useOutletContextProps = {
   resendConfirmationCode: (email: string) => void;
   confirmSignUp: (email: string, code: string) => void;
   signUp: (email: string, pwd: string) => void;
+};
+
+export type useOutletContextProfileProps = {
+  loadClient: (force?: boolean) => void;
+  setLoading: (loading?: boolean) => void;
 };
 
 export type LocationType = {
@@ -38,6 +43,8 @@ export type OwnersType = {
   name: string;
   email: string;
   phone: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type ProfileType = {
@@ -54,8 +61,27 @@ export type ProfileType = {
   street?: string;
   number?: string;
   complement?: string;
-  avatar?: string;
+  website?: string;
+  map?: string;
+  logo?: string;
   owners?: OwnersType[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+export type AddressFromCEPType = {
+  state: string;
+  street: string;
+  city: string;
+}
+
+export type CreateMapType = {
+	type: MapTypes;
+	id: string;
+	name: string;
+	street: string;
+	number: string;
+	city: string;
+	state: string;
+	zipCode: string;
 }

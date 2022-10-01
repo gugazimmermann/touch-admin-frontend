@@ -14,6 +14,8 @@ const ConfirmSignUp = lazy(() => import("./pages/auth/ConfirmSignUp"));
 const Layout = lazy(() => import("./pages/layout/Layout"));
 const Home = lazy(() => import("./pages/home/Home"));
 const Alerts = lazy(() => import("./pages/alerts/Alerts"));
+const Profile = lazy(() => import("./pages/profile/Profile"));
+const ProfileCognito = lazy(() => import("./pages/profile/ProfileCognito"));
 
 function App() {
   return (
@@ -29,6 +31,8 @@ function App() {
         <Route element={<Layout />}>
           <Route path={ROUTES.HOME} element={<Home />} />
           <Route path={ROUTES.ALERTS} element={<Alerts />} />
+          <Route path={ROUTES.PROFILE} element={<Profile />} />
+          <Route path={ROUTES.PROFILE_ADVANCED} element={<ProfileCognito />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

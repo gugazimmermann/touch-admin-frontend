@@ -6,7 +6,9 @@ const secret = process.env.REACT_APP_CRYPTO_SECRECT || "123";
 
 const encode = (data: string): string => CryptoJS.AES.encrypt(data, secret).toString();
 
-const decode = (data: string): string => (CryptoJS.AES.decrypt(data, secret)).toString(CryptoJS.enc.Utf8);
+const decode = (data: string): string => {
+  return data ? (CryptoJS.AES.decrypt(data, secret)).toString(CryptoJS.enc.Utf8) : ""
+};
 
 const Get = (): GenericObject => {
   let storage = {};

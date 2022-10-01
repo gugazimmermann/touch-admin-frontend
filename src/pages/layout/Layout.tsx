@@ -40,16 +40,19 @@ export default function Layout() {
   }, [dispatch, state.profile.owners, state.profile?.phone]);
 
   const seeProfile = async (): Promise<ProfileType> => {
-    let profile = await ProfileAPI.getCurrentUser();
+    let profile = await ProfileAPI.get();
     // first access, add profile to DynamoDB
-    if (!profile.profileID) profile = await ProfileAPI.postCurrentUser();
+    if (!profile.profileID) profile = await ProfileAPI.post();
     return profile;
   };
 
   const loadClient = useCallback(async () => {
     setLoading(true);
     const getCookie = COOKIES.Decode(cookies.get(COOKIES.NAME));
-    if (!getCookie?.sub) navigate(ROUTES.SIGNIN);
+    if (!getCookie?.sub) {
+      navigate(ROUTES.SIGNIN);
+      return;
+    }
     const profile = await seeProfile();
     dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: profile });
     profileAlert();

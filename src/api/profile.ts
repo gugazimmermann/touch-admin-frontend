@@ -6,12 +6,12 @@ import AxiosInstance from "./index";
 const cookies = new Cookies();
 const getCookie = COOKIES.Decode(cookies.get(COOKIES.NAME));
 
-export const getCurrentUser = async (): Promise<ProfileType> => {
+export const get = async (): Promise<ProfileType> => {
   const { data } = await AxiosInstance.get("profiles/" + getCookie.sub);
   return data.data;
 };
 
-export const postCurrentUser =async (): Promise<ProfileType> => {
+export const post =async (): Promise<ProfileType> => {
   const { data } = await AxiosInstance.post("profiles", {
     profileID: getCookie.sub,
     email: getCookie.email
@@ -19,6 +19,11 @@ export const postCurrentUser =async (): Promise<ProfileType> => {
   return data.data;
 }
 
-const ProfileAPI = { getCurrentUser, postCurrentUser };
+export const update =async (profile: ProfileType): Promise<ProfileType> => {
+  const { data } = await AxiosInstance.put("profiles", profile);
+  return data.data;
+}
+
+const ProfileAPI = { get, post, update };
 
 export default ProfileAPI;
