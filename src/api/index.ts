@@ -6,6 +6,7 @@ const API_URL = process.env.REACT_APP_API_URL || "";
 const cookies = new Cookies();
 const getCookie = COOKIES.Decode(cookies.get(COOKIES.NAME));
 
+// TODO: handle renew session
 const AxiosInstance = axios.create({
   baseURL: API_URL,
   headers:{
