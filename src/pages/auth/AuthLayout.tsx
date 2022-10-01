@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import Cookies from 'universal-cookie';
+import { v4 as uuidv4 } from 'uuid';
 import LogoIcon from "../../images/LogoIcon";
 import { AlertType } from "../../interfaces/types";
 import { Alert, Loading, Title } from "../../components";
 import Auth from "../../api/auth";
 import { COOKIES } from "../../helpers";
 import { ALERT, ROUTES } from '../../interfaces/enums';
+import ProfileAPI from "../../api/profile";
 
 const projectName = process.env.REACT_APP_TITLE || "Touch Sistemas";
 const cookies = new Cookies();
@@ -102,7 +104,7 @@ export default function AuthLayout() {
     try {
       // we'll use just pt-BR for now
       await Auth.SignUp(email, pwd, 'pt-BR');
-      // await Mutations.createClient(email);
+      await ProfileAPI.post({email, profileID: uuidv4()})
       stopLoading();
       navigate(ROUTES.CONFIRMSIGNUP, {
         state: {
