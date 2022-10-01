@@ -1,18 +1,18 @@
 import { useCallback, useContext, useEffect, useState } from "react";
-import Cookies from 'universal-cookie';
+import Cookies from "universal-cookie";
 import { Outlet, useNavigate } from "react-router-dom";
 import Auth from "../../api/auth";
 import { Footer, Loading, Nav } from "../../components";
 import { COOKIES } from "../../helpers";
-import { CONTEXT, ROUTES } from '../../interfaces/enums';
+import { ALERT, CONTEXT, ROUTES } from "../../interfaces/enums";
 import ProfileAPI from "../../api/profile";
 import { AppContext } from "../../context";
-import { ProfileType } from "../../interfaces/types";
+import { AlertType, ProfileType } from "../../interfaces/types";
 
 const cookies = new Cookies();
 
 export default function Layout() {
-  const { dispatch } = useContext(AppContext);
+  const { state, dispatch } = useContext(AppContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -22,21 +22,39 @@ export default function Layout() {
     navigate(ROUTES.SIGNIN);
   }, [navigate]);
 
+  const profileAlert = useCallback(() => {
+    setLoading(true);
+    const alerts = [] as AlertType[];
+    if (!state.profile?.phone)
+      alerts.push({
+        type: ALERT.WARNING,
+        text: "Seu cadastro está incompleto, finalize para utilizar o sistema.",
+      });
+    if (!state.profile?.owners || !state.profile.owners.length)
+      alerts.push({
+        type: ALERT.WARNING,
+        text: "Nenhum responsável cadastrado!",
+      });
+    dispatch({ type: CONTEXT.UPDATE_ALERTS, payload: alerts });
+    setLoading(false);
+  }, [dispatch, state.profile.owners, state.profile?.phone]);
+
   const seeProfile = async (): Promise<ProfileType> => {
     let profile = await ProfileAPI.getCurrentUser();
     // first access, add profile to DynamoDB
     if (!profile.profileID) profile = await ProfileAPI.postCurrentUser();
-    return profile
-  }
+    return profile;
+  };
 
   const loadClient = useCallback(async () => {
     setLoading(true);
     const getCookie = COOKIES.Decode(cookies.get(COOKIES.NAME));
     if (!getCookie?.sub) navigate(ROUTES.SIGNIN);
     const profile = await seeProfile();
-    dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: profile})
+    dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: profile });
+    profileAlert();
     setLoading(false);
-  }, [dispatch, navigate]);
+  }, [dispatch, navigate, profileAlert]);
 
   useEffect(() => {
     loadClient();

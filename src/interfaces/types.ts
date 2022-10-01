@@ -34,6 +34,12 @@ export type CognitoUserType = {
 
 export type GenericObject = { [key: string]: any };
 
+export type OwnersType = {
+  name: string;
+  email: string;
+  phone: string;
+}
+
 export type ProfileType = {
   profileID: string;
   email: string;
@@ -49,6 +55,7 @@ export type ProfileType = {
   number?: string;
   complement?: string;
   avatar?: string;
+  owners?: OwnersType[];
   createdAt?: string;
   updatedAt?: string;
 }

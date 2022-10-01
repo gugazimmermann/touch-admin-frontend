@@ -5,7 +5,8 @@ export enum ROUTES {
   SIGNUP = "/cadastrar",
   CONFIRMSIGNUP = "/confirmar-cadastro",
   HOME = "/inicial",
-  PROFILE = "/perfil"
+  PROFILE = "/perfil",
+  ALERTS = "/alertas"
 }
 
 export enum ALERT {

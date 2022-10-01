@@ -13,6 +13,7 @@ const ConfirmSignUp = lazy(() => import("./pages/auth/ConfirmSignUp"));
 
 const Layout = lazy(() => import("./pages/layout/Layout"));
 const Home = lazy(() => import("./pages/home/Home"));
+const Alerts = lazy(() => import("./pages/alerts/Alerts"));
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         </Route>
         <Route element={<Layout />}>
           <Route path={ROUTES.HOME} element={<Home />} />
+          <Route path={ROUTES.ALERTS} element={<Alerts />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
