@@ -1,40 +1,28 @@
 import { ReactElement, ReactNode, useContext, useEffect, useState } from "react";
-import { Input, Button, Title, ConfirmationDialog, Table, Form } from "../../components";
-import { AppContext } from "../../context";
+import { Input, Button, Title, ConfirmationDialog, Table, Form, Alert } from "../../components";
 import { validateEmail, normalizePhone } from "../../helpers";
-import { OwnersType } from "../../interfaces/types";
+import { ALERT } from "../../interfaces/enums";
+import { OwnersType, useOutletContextProfileProps } from "../../interfaces/types";
+import ProfileAPI from '../../api/profile';
+import { useOutletContext } from "react-router-dom";
+import { AppContext } from "../../context";
 
-type OwnersProps = {
-  clientID: string;
-  setError: (error: boolean) => void;
-  setErrorMsg: (errorMsg: string) => void;
-  setLoading: (loading?: boolean) => void;
-  loadClient: (force?: boolean) => void;
+const initial = {
+  name: "",
+  phone: "",
+  email: ""
 };
 
-const initial = { id: "", name: "", phone: "", email: "", ClientID: "" };
-
-export default function Owners({
-  clientID,
-  setError,
-  setErrorMsg,
-  setLoading,
-}: OwnersProps): ReactElement {
+export default function Owners(): ReactElement {
+  const { loadClient, setLoading } = useOutletContext<useOutletContextProfileProps>();
   const { state } = useContext(AppContext);
+  const [error, setError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
   const [ownersList, setOwnersList] = useState<OwnersType[]>([]);
   const [formOwner, setFormOwner] = useState<OwnersType>(initial);
   const [selected, setSelected] = useState<OwnersType>({} as OwnersType);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [update, setUpdate] = useState(false);
-
-  // const getOwnersList = useCallback(async () => {
-  //   const listOwners = await Queries.listOwners(clientID);
-  //   setOwnersList(listOwners || []);
-  // }, [clientID]);
-
-  // useEffect(() => {
-  //   getOwnersList();
-  // }, [getOwnersList]);
 
   useEffect(() => {
     if (!update && selected) setSelected(initial);
@@ -42,7 +30,7 @@ export default function Owners({
   }, [update]);
 
   function validadeForm(f: OwnersType) {
-    if (!f.email || !f.name || !f.phone) {
+    if (!f.name || !f.phone || !f.email) {
       setErrorMsg('Preencha os campos obrigatórios!');
       return false;
     }
@@ -66,22 +54,27 @@ export default function Owners({
       setLoading(false);
       return null;
     }
-    // if (!u) await Mutations.createOwner(formOwner, clientID);
-    // else await Mutations.updateOwner(selected);
+    if (!u) formOwner.phone = formOwner.phone ? `+55${(formOwner.phone || "").replace(/[^\d]/g, "")}` : "";
+    if (u) selected.phone = selected.phone ? `+55${(selected.phone || "").replace(/[^\d]/g, "")}` : "";
+    await ProfileAPI.ownerPatch(!u ? formOwner : selected)
+    loadClient();
     setUpdate(false);
     setFormOwner(initial);
-    // getOwnersList();
     setLoading(false);
     return true;
   }
 
   async function handleDelete(): Promise<void> {
     setLoading(true);
-    // await Mutations.deleteOwner(selected.id);
+    await ProfileAPI.ownerPatch({ ownerID: selected.ownerID, email: selected.email })
+    loadClient();
     setConfirmDelete(false);
-    // getOwnersList();
     setLoading(false);
   }
+
+  useEffect(() => {
+    setOwnersList(state.profile.owners || [])
+  }, [state.profile.owners]);
 
   function renderForm() {
     return (
@@ -89,7 +82,7 @@ export default function Owners({
         <div className="w-full md:w-4/12 sm:pr-4 mb-4">
           <Input
             type="text"
-            value={!update ? formOwner.name : selected.name}
+            value={!update ? formOwner.name || "" : selected.name || ""}
             placeholder="Nome"
             handler={(e) => {
               if (!update) setFormOwner({ ...formOwner, name: e.target.value });
@@ -100,7 +93,7 @@ export default function Owners({
         <div className="w-full md:w-4/12 sm:pr-4 mb-4">
           <Input
             type="text"
-            value={!update ? formOwner.phone : selected.phone}
+            value={!update ? formOwner?.phone || "" : selected.phone || ""}
             placeholder="Telefone *"
             handler={(e) => {
               if (!update)
@@ -119,7 +112,7 @@ export default function Owners({
         <div className="w-full md:w-4/12 mb-4">
           <Input
             type="email"
-            value={!update ? formOwner.email : selected.email}
+            value={!update ? formOwner.email || "" : selected.email || ""}
             placeholder="Email *"
             handler={(e) => {
               if (!update)
@@ -224,6 +217,7 @@ export default function Owners({
             : "font-bold text-center"
         }
       />
+      {error && <Alert type={ALERT.ERROR} text={errorMsg} />}
       {renderForm()}
       {ownersList && ownersList.length > 0 && (
         <Table header={header()} body={body()} />

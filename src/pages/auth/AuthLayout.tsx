@@ -171,7 +171,7 @@ export default function AuthLayout() {
   const loadUser = useCallback(async () => {
     setLoading(true);
     const getCookie = COOKIES.Decode(cookies.get(COOKIES.NAME));
-    if (getCookie?.email && getCookie?.idToken) {
+    if (getCookie?.sub && getCookie?.idToken) {
       try {
         const getUser = await Auth.GetUser();
         if (getUser.sub === getCookie.sub) navigate(ROUTES.HOME);

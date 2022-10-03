@@ -30,10 +30,11 @@ import {
   BrazilStates,
 } from "../../interfaces/enums";
 import {
+  OwnersType,
   ProfileType,
   useOutletContextProfileProps,
 } from "../../interfaces/types";
-import Owners from "./Owners";
+import Owners from './Owners';
 
 const initial = {
   profileID: "",
@@ -417,13 +418,7 @@ export default function Profile() {
         </div>
       </Form>
       {profile && (
-        <Owners
-          clientID={profile.profileID}
-          setError={setError}
-          setErrorMsg={setErrorMsg}
-          setLoading={setLoading}
-          loadClient={loadClient}
-        />
+        <Owners />
       )}
     </>
   );

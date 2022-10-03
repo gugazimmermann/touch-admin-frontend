@@ -40,9 +40,10 @@ export type CognitoUserType = {
 export type GenericObject = { [key: string]: any };
 
 export type OwnersType = {
-  name: string;
-  email: string;
-  phone: string;
+  ownerID?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
   createdAt?: string;
   updatedAt?: string;
 }

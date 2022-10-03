@@ -1,8 +1,10 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useContext, useEffect, useState } from "react";
 import Cookies from "universal-cookie";
 import { Outlet, useNavigate } from "react-router-dom";
 import Auth from "../../api/auth";
-import { Footer, Loading, Nav } from "../../components";
+// import { Footer, Loading, Nav } from "../../components";
+import { Loading, Nav } from "../../components";
 import { COOKIES } from "../../helpers";
 import { ALERT, CONTEXT, ROUTES } from "../../interfaces/enums";
 import ProfileAPI from "../../api/profile";
@@ -22,46 +24,46 @@ export default function Layout() {
     navigate(ROUTES.SIGNIN);
   }, [navigate]);
 
-  const profileAlert = useCallback(() => {
+  const profileAlert = useCallback((profile: ProfileType) => {
     setLoading(true);
     const alerts = [] as AlertType[];
-    if (!state.profile?.phone)
+    if (!profile?.phone)
       alerts.push({
         type: ALERT.WARNING,
         text: "Seu cadastro está incompleto, finalize para utilizar o sistema.",
       });
-    if (!state.profile?.owners || !state.profile.owners.length)
+    if (!profile?.owners || !profile.owners.length)
       alerts.push({
         type: ALERT.WARNING,
         text: "Nenhum responsável cadastrado!",
       });
     dispatch({ type: CONTEXT.UPDATE_ALERTS, payload: alerts });
     setLoading(false);
-  }, [dispatch, state.profile.owners, state.profile?.phone]);
+  }, []);
 
   const seeProfile = async (): Promise<ProfileType> => {
     let profile = await ProfileAPI.get();
-    // first access, add profile to DynamoDB
     if (!profile.profileID) profile = await ProfileAPI.post();
     return profile;
   };
 
-  const loadClient = useCallback(async () => {
+  const loadClient = useCallback(async (force?: boolean) => {
     setLoading(true);
     const getCookie = COOKIES.Decode(cookies.get(COOKIES.NAME));
     if (!getCookie?.sub) {
       navigate(ROUTES.SIGNIN);
       return;
     }
-    const profile = await seeProfile();
-    dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: profile });
-    profileAlert();
+      const profile = await seeProfile();
+      console.log(profile)
+      dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: profile });
+      profileAlert(profile);
     setLoading(false);
-  }, [dispatch, navigate, profileAlert]);
+  }, []);
 
   useEffect(() => {
     loadClient();
-  }, [loadClient]);
+  }, []);
 
   return (
     <main className="layout flex flex-col h-screen justify-between container mx-auto max-w-5xl">
@@ -70,7 +72,7 @@ export default function Layout() {
       <div className="layout mb-auto h-full p-4 bg-slate-100">
         <Outlet context={{ loadClient, setLoading }} />
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </main>
   );
 }
