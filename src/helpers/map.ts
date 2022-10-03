@@ -2,7 +2,7 @@ import axios from 'axios';
 import { PlansTypes } from "../interfaces/enums";
 import { CreateMapType } from "../interfaces/types";
 
-const API_KEY = process.env.REACT_APP_API_KEY || "";
+const API_KEY = (process.env.NODE_ENV === 'development' ? process.env.REACT_APP_API_KEY : process.env.REACT_APP_API_KEY_PROD) || "";
 
 export async function createMap({ type, id, name, street, number, city, state, zipCode }: CreateMapType): Promise<File> {
 	const color = type === PlansTypes.SUBSCRIPTION ? '0xa855f7' : (type === PlansTypes.BASIC || type === PlansTypes.ADVANCED) ? '0x10b981' : '0xf59e0b';
