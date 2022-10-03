@@ -29,7 +29,7 @@ The output will be similar to this one:
 
 ```bash
 Your app is published successfully.
-https://d1aewi60iom71h.cloudfront.net
+https://d113tyd56o48tz.cloudfront.net
 ```
 
 Pay attention that in the backend we need to modify the CORS to accept this domain, and not only the localhost
