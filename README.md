@@ -1,6 +1,6 @@
 # Login and Profile
 
-Live: <https://d1aewi60iom71h.cloudfront.net>
+Live: <https://admin.touchsistemas.com.br>
 
 ## Tech Used
 
@@ -32,4 +32,6 @@ Your app is published successfully.
 https://d113tyd56o48tz.cloudfront.net
 ```
 
-Pay attention that in the backend we need to modify the CORS to accept this domain, and not only the localhost
+Pay attention that in the backend we need to modify the CORS to accept this domain, and not only the localhost.
+
+We can also change the CloudFormation to work with Route43 and add a custom domain, in my case is <https://admin.touchsistemas.com.br>
