@@ -11,7 +11,7 @@ export const get = async (): Promise<ProfileType> => {
   return data.data;
 };
 
-export const post =async (): Promise<ProfileType> => {
+export const post = async (): Promise<ProfileType> => {
   const { data } = await AxiosInstance.post("/profiles", {
     profileID: getCookie.sub,
     email: getCookie.email
@@ -19,16 +19,22 @@ export const post =async (): Promise<ProfileType> => {
   return data.data;
 }
 
-export const update =async (profile: ProfileType): Promise<ProfileType> => {
+export const update = async (profile: ProfileType): Promise<ProfileType> => {
   const { data } = await AxiosInstance.put("/profiles", profile);
   return data.data;
 }
 
-export const ownerPatch =async (owner: OwnersType): Promise<OwnersType> => {
+export const ownerPatch = async (owner: OwnersType): Promise<OwnersType> => {
   const { data } = await AxiosInstance.patch(`/profiles/${getCookie.sub}/owners`, owner);
   return data.data;
 }
 
-const ProfileAPI = { get, post, update, ownerPatch };
+
+export const emailPatch = async (email: string): Promise<OwnersType> => {
+  const { data } = await AxiosInstance.patch(`/profiles/${getCookie.sub}`, { email });
+  return data.data;
+}
+
+const ProfileAPI = { get, post, update, ownerPatch, emailPatch };
 
 export default ProfileAPI;

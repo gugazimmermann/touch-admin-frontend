@@ -1,6 +1,7 @@
 import { useContext, useState, useEffect } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import Auth from "../../api/auth";
+import ProfileAPI from "../../api/profile";
 import { Button, Input, Title, Alert, Form } from "../../components";
 import { AppContext } from "../../context";
 import { validateEmail } from "../../helpers";
@@ -36,7 +37,7 @@ export default function Profile() {
     loading();
     try {
       await Auth.ChangeEmail(email)
-      // await Mutations.updateClientEmail(state.client.id, email);
+      await ProfileAPI.emailPatch(email);
       setShowCode(true);
     } catch (error: any) {
       setAlert({ type: ALERT.ERROR, text: error.message });
