@@ -1,5 +1,6 @@
-import { ReactElement, useEffect, useState } from "react";
+import { ReactElement, useContext, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { AppContext } from "../context";
 import { useCloseModal } from "../helpers";
 import { ArrowIcon, AvatarIcon } from "../images";
 import { ROUTES } from "../interfaces/enums";
@@ -9,7 +10,11 @@ type NavProfileProps = {
   qtd: number;
 };
 
+const LOGO_MAPS_BUCKET = process.env.REACT_APP_LOGO_MAPS_BUCKET || "";
+
+
 const NavProfile = ({ handleSignOut, qtd }: NavProfileProps): ReactElement => {
+  const { state } = useContext(AppContext);
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const ref = useCloseModal(open, setOpen);
@@ -26,7 +31,11 @@ const NavProfile = ({ handleSignOut, qtd }: NavProfileProps): ReactElement => {
         className="flex items-center px-1"
         onClick={() => setOpen(!open)}
       >
-        <AvatarIcon styles="h-8 w-8 text-primary" />
+        {state.profile?.logo ? (
+					<img alt="client logo" src={`https://${LOGO_MAPS_BUCKET}.s3.amazonaws.com${state.profile?.logo}`} className="h-8 w-8 rounded" />
+				) : (
+					<AvatarIcon styles="h-8 w-8 text-primary" />
+				)}
         {!!qtd && (
           <span className="text-white bg-orange-500 absolute rounded-full text-xs -top-0.5 right-2 py-0 px-1.5">
             {qtd}

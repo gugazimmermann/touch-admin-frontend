@@ -1,6 +1,7 @@
 import { useContext, useState, useCallback, useEffect } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import ProfileAPI from "../../api/profile";
+import { sendPublicFile } from "../../api/storage";
 import {
   Title,
   Alert,
@@ -28,13 +29,13 @@ import {
   DOCS,
   MAP,
   BrazilStates,
+  FILETYPES,
 } from "../../interfaces/enums";
 import {
-  OwnersType,
   ProfileType,
   useOutletContextProfileProps,
 } from "../../interfaces/types";
-import Owners from './Owners';
+import Owners from "./Owners";
 
 const initial = {
   profileID: "",
@@ -64,7 +65,7 @@ export default function Profile() {
   const [errorMsg, setErrorMsg] = useState("");
   const [profile, setProfile] = useState<ProfileType>();
   const [form, setForm] = useState(initial);
-  const [logo, setLogo] = useState<File>();
+  const [logoFile, setLogoFile] = useState<File>();
   const [fileName, setFileName] = useState("Logo");
   const [progress, setProgress] = useState<number>(0);
 
@@ -118,7 +119,7 @@ export default function Profile() {
       return;
     }
     setFileName(file.name);
-    setLogo(file);
+    setLogoFile(file);
     setErrorMsg("");
     setError(false);
   }
@@ -158,50 +159,41 @@ export default function Profile() {
   }
 
   async function handleLogoAndMap(p: ProfileType) {
-    let mapURL = p.map;
-    let logoURL = p.logo;
-    if (
-      form.name !== p.name ||
-      form.street !== p.street ||
-      form.number !== p.number ||
-      form.city !== p.city ||
-      form.state !== p.state ||
-      form.zipCode.replace(/[^\d]/g, "") !== p.zipCode
-    ) {
-      const map = await createMap({
-        type: MAP.CLIENT,
+    let mapURL = p.map || "";
+    let logoURL = p.logo || "";
+    const mapFile = await createMap({
+      type: MAP.CLIENT,
+      id: p.profileID,
+      name: form.name,
+      street: form.street,
+      number: form.number,
+      city: form.city,
+      state: form.state,
+      zipCode: form.zipCode,
+    });
+    await sendPublicFile({
+      type: FILETYPES.MAP,
+      id: p.profileID,
+      file: mapFile,
+      setProgress,
+    });
+    mapURL = `/public/map/${
+      mapFile.name
+    }?${Date.now()}`;
+    if (logoFile) {
+      await sendPublicFile({
+        type: FILETYPES.LOGO,
         id: p.profileID,
-        name: form.name,
-        street: form.street,
-        number: form.number,
-        city: form.city,
-        state: form.state,
-        zipCode: form.zipCode,
+        file: logoFile,
+        setProgress,
       });
-      // await sendPublicFile({
-      //   type: FILETYPES.MAP,
-      //   id: p.profileID,
-      //   file: map,
-      //   setProgress,
-      // });
-      mapURL = `${process.env.REACT_APP_IMAGES_URL}map/${
-        map.name
-      }?${Date.now()}`;
-    }
-    if (logo) {
-      // await sendPublicFile({
-      //   type: FILETYPES.LOGO,
-      //   id: p.profileID,
-      //   file: logo,
-      //   setProgress,
-      // });
-      logoURL = logo
-        ? `${process.env.REACT_APP_IMAGES_URL}logo/${p.profileID}.${logo.name
+      logoURL = logoFile
+        ? `/public/logo/${p.profileID}.${logoFile.name
             .split(".")
             .pop()}?${Date.now()}`
-        : undefined;
+        : "";
     }
-    // await updateClientLogoAndMap(client.id, logoURL, mapURL);
+    await ProfileAPI.logoAndMapPatch(logoURL, mapURL);
   }
 
   async function handleSubmit(): Promise<boolean> {
@@ -225,7 +217,7 @@ export default function Profile() {
       await handleLogoAndMap(form);
       loadClient(true);
       setLoading(false);
-      // navigate(ROUTES.HOME);
+      navigate(ROUTES.HOME);
       return true;
     }
     return false;
@@ -417,9 +409,7 @@ export default function Profile() {
           <Button text="Atualizar Cadastro" handler={() => handleSubmit()} />
         </div>
       </Form>
-      {profile && (
-        <Owners />
-      )}
+      {profile && <Owners />}
     </>
   );
 }

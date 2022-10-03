@@ -14,8 +14,9 @@ IMPORTANT NOTE: `./amplify` was added to `.gitignore`, this way every new build 
 * run `npm install` to install dependencies packages
 * create `.env` file as `.env.sample`, use the output from the backend
 * `amplify init` to import Cognito and Hosting
-* `amplify import auth` and choose **Cognito User Pool only**, select the created userPool from the backend output;
-* run `amplify push` to import the cognito info
+* `amplify import auth` and choose **Cognito User Pool and Identity Pool**, select the created userPool from the backend output;
+* `amplify import storage` and choose the bucket Logo and Maps bucket from the backend output
+* run `amplify push`
 * run `npm start` to run the react app
 
 ## How to Deploy

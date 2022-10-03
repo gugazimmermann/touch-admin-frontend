@@ -86,3 +86,10 @@ export type CreateMapType = {
 	state: string;
 	zipCode: string;
 }
+
+export type SendPublicFileType = {
+  type: string,
+  id: string,
+  file: File,
+  setProgress: (progress: number) => void;
+}
