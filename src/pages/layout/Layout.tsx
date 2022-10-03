@@ -55,7 +55,6 @@ export default function Layout() {
       return;
     }
       const profile = await seeProfile();
-      console.log(profile)
       dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: profile });
       profileAlert(profile);
     setLoading(false);
