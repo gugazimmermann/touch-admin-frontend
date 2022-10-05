@@ -341,20 +341,11 @@ export default function Profile() {
             type="text"
             value={form.zipCode || ""}
             placeholder="CEP *"
-            handler={(e) =>
-              setForm({ ...form, zipCode: normalizeCEP(e.target.value) })
+            handler={(e) => setForm({ ...form, zipCode: normalizeCEP(e.target.value) })
             }
           />
         </div>
         <div className="w-full md:w-4/12 sm:pr-4 mb-4">
-          <Input
-            type="text"
-            value={form.city || ""}
-            placeholder="Cidade *"
-            handler={(e) => setForm({ ...form, city: e.target.value })}
-          />
-        </div>
-        <div className="w-full md:w-4/12 mb-4">
           <Select
             placeholder="Estado"
             value={form.state || ""}
@@ -369,6 +360,14 @@ export default function Profile() {
               ))}
             </>
           </Select>
+        </div>
+        <div className="w-full md:w-4/12 mb-4">
+          <Input
+            type="text"
+            value={form.city || ""}
+            placeholder="Cidade *"
+            handler={(e) => setForm({ ...form, city: e.target.value })}
+          />
         </div>
         <div className="w-full md:w-4/12 sm:pr-4 mb-4">
           <Input
