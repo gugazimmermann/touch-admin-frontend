@@ -1,4 +1,5 @@
-import { ALERT, MapTypes } from "./enums";
+import { ReactElement } from "react";
+import { ALERT, MapTypes, PlansFrequency, PLANSTYPES } from "./enums";
 
 export type AlertType = {
   type?: ALERT;
@@ -93,3 +94,22 @@ export type SendPublicFileType = {
   file: File,
   setProgress: (progress: number) => void;
 }
+
+export type PlanType = {
+  planID: string;
+  name: string;
+  type: PLANSTYPES;
+  frequency: PlansFrequency;
+  detail: string[];
+  price: number;
+}
+
+export type PlansCardInfoType = {
+  color: string;
+  icon: ReactElement;
+};
+
+export type PlansModalType = {
+  plan: PlanType;
+  info: PlansCardInfoType;
+};
