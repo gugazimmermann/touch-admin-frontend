@@ -20,8 +20,8 @@ export type useOutletContextProfileProps = {
 
 
 export type AlertType = {
-  type?: ALERT;
-  text?: string;
+  type: ALERT | undefined;
+  text: string | undefined;
 };
 
 export type LocationType = {
@@ -49,7 +49,7 @@ interface IDBDates {
 }
 
 export interface IContacts {
-  email: string;
+  email?: string;
   phone?: string;
   website?: string;
 }
