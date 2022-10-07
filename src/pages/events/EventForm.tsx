@@ -9,8 +9,10 @@ import {
   ALERT,
   BrazilStates,
   FILEERROR,
+  FILETYPES,
 } from "../../interfaces/enums";
 import {
+  createMap,
   getAddressFromCEP,
   normalizeCEP,
   normalizeWebsite,
@@ -37,6 +39,7 @@ import slugify from "slugify";
 import ReferralsAPI from "../../api/referral";
 import EventsAPI from "../../api/events";
 import { AppContext } from "../../context";
+import { sendPublicFile } from "../../api/storage";
 
 const initial = {
   name: "",
@@ -73,7 +76,7 @@ export default function EventForm() {
   const [formEvent, setFormEvent] = useState<EventType>(initial);
   const [eventLogo, setEventLogo] = useState<File>();
   const [fileName, setFileName] = useState("Logo");
-  const [progress, setProgress] = useState();
+  const [progress, setProgress] = useState<number>(0);
 
   const getAddress = useCallback(async () => {
     setErrorMsg("");
@@ -132,7 +135,7 @@ export default function EventForm() {
     setEventLogo(file);
     setErrorMsg("");
     setError(false);
-  };
+  }
 
   const handleDatesChange = (value: any) => {
     const dates = value.toString().split(",");
@@ -199,27 +202,59 @@ export default function EventForm() {
     return true;
   };
 
+  const handleLogoAndMap = async (f: EventType) => {
+    let mapURL = f.map || "";
+    let logoURL = f.logo || "";
+    const mapFile = await createMap({
+      type: plan?.type === 'ADVANCED' ? PLANSTYPES.ADVANCED : PLANSTYPES.BASIC,
+      id: f.eventID as string,
+      name: f.name,
+      street: f.street,
+      number: f.number,
+      city: f.city,
+      state: f.state,
+      zipCode: f.zipCode,
+    });
+    await sendPublicFile({
+      type: FILETYPES.MAP,
+      id: f.eventID as string,
+      file: mapFile,
+      setProgress,
+    });
+    mapURL = `/public/map/${ mapFile.name }?${Date.now()}`;
+    if (eventLogo) {
+      await sendPublicFile({
+        type: FILETYPES.LOGO,
+        id: f.eventID as string,
+        file: eventLogo,
+        setProgress,
+      });
+      logoURL = eventLogo
+        ? `/public/logo/${(f.eventID as string)}.${eventLogo.name.split(".").pop()}?${Date.now()}`
+        : "";
+    }
+    await EventsAPI.logoAndMapPatch(f.eventID as string, logoURL, mapURL);
+  }
+
+
   const handleAdd = async () => {
     setErrorMsg("");
     setError(false);
     setLoading(true);
-    let event = JSON.parse(JSON.stringify(formEvent));
-    const fomartedDates = event.dates.map((d: string) =>
+    const fomartedDates = formEvent.dates.map((d: string) =>
       DateTime.fromFormat(d, "dd/MM/yyyy").toFormat("yyyy-MM-dd")
     );
-    event = {
-      ...event,
+    const event = await EventsAPI.post({
+      ...formEvent,
       profileID: state.profile.profileID,
-      zipCode: event.zipCode ? event.zipCode.replace(/[^\d]/g, "") : "",
-      website: event.website ? normalizeWebsite(event.website || "") : "",
+      zipCode: formEvent.zipCode ? formEvent.zipCode.replace(/[^\d]/g, "") : "",
+      website: formEvent.website ? normalizeWebsite(formEvent.website || "") : "",
       dates: fomartedDates,
-      gift: event.gift === 'YES' ? 1 : 0,
-      prizeDraw: event.prizeDraw === 'YES' ? 1 : 0,
-      referral: event.referral,
-    }
-    console.log(event)
-    const teste = await EventsAPI.post(event);
-    console.log(teste);
+      gift: formEvent.gift === 'YES' ? 1 : 0,
+      prizeDraw: formEvent.prizeDraw === 'YES' ? 1 : 0,
+      referral: formEvent.referral,
+    });
+    await handleLogoAndMap(event);
     setFormEvent(initial);
     navigate(ROUTES.HOME);
     setLoading(false);

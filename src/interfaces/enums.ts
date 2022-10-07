@@ -69,7 +69,7 @@ export enum DOCS {
 }
 
 export enum MAP {
-  CLIENT = "client",
+  PROFILE = "profile",
 }
 
 export enum PLANSTYPES {

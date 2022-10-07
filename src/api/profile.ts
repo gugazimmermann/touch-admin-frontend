@@ -24,7 +24,7 @@ export const update = async (profile: ProfileType): Promise<ProfileType> => {
   return data.data;
 }
 
-export const logoAndMapPatch = async (logo: string, map: string): Promise<OwnersType> => {
+export const logoAndMapPatch = async (logo: string, map: string): Promise<ProfileType> => {
   const { data } = await AxiosInstance.patch(`/profiles/${getCookie.sub}/logomap`, { logo, map });
   return data.data;
 }
@@ -35,7 +35,7 @@ export const ownerPatch = async (owner: OwnersType): Promise<OwnersType> => {
 }
 
 
-export const emailPatch = async (email: string): Promise<OwnersType> => {
+export const emailPatch = async (email: string): Promise<ProfileType> => {
   const { data } = await AxiosInstance.patch(`/profiles/${getCookie.sub}`, { email });
   return data.data;
 }

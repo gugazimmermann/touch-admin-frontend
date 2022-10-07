@@ -1,5 +1,5 @@
 import { ReactElement } from "react";
-import { ALERT, MapTypes, PlansFrequency, PLANSTYPES } from "./enums";
+import { ALERT, FILETYPES, MapTypes, PlansFrequency, PLANSTYPES } from "./enums";
 
 export type useOutletContextProps = {
   setAlert: (alert: AlertType) => void;
@@ -92,7 +92,7 @@ export interface CreateMapType extends IAddress {
 }
 
 export type SendPublicFileType = {
-  type: string,
+  type: FILETYPES,
   id: string,
   file: File,
   setProgress: (progress: number) => void;
@@ -125,16 +125,18 @@ export interface ReferralType extends IDBDates, IAddress, IContacts {
 }
 
 export interface EventType extends IDBDates, IAddress, IContacts {
+  eventID?: UUID;
   profileID?: UUID;
   name: string;
   dates: string[];
-  method: string;
-  gift: string;
-  giftDescription?: string;
-  prizeDraw: string;
-  prizeDrawDescription?: string;
   referralCode?: string;
   referral?: ReferralType;
+  method: string;
+  gift: string | number;
+  giftDescription?: string;
+  prizeDraw: string | number;
+  prizeDrawDescription?: string;
+  description?: string;
   map?: string;
   logo?: string;
 }

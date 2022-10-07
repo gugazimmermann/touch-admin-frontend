@@ -161,7 +161,7 @@ export default function Profile() {
     let mapURL = p.map || "";
     let logoURL = p.logo || "";
     const mapFile = await createMap({
-      type: MAP.CLIENT,
+      type: MAP.PROFILE,
       id: p.profileID,
       name: form.name,
       street: form.street,
