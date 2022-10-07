@@ -133,7 +133,8 @@ export interface EventType extends IDBDates, IAddress, IContacts {
   giftDescription?: string;
   prizeDraw: string;
   prizeDrawDescription?: string;
-  referralCode: string;
+  referralCode?: string;
+  referral?: ReferralType;
   map?: string;
   logo?: string;
 }
