@@ -102,7 +102,7 @@ export default function Profile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.zipCode]);
 
-  function handleFile(e: React.FormEvent<HTMLInputElement>) {
+  const handleFile = (e: React.FormEvent<HTMLInputElement>) => {
     setErrorMsg("");
     setError(false);
     const file = validateFile((e.target as HTMLInputElement).files as FileList);
@@ -123,7 +123,7 @@ export default function Profile() {
     setError(false);
   }
 
-  function validadeForm(f: ProfileType) {
+  const validadeForm = (f: ProfileType) => {
     if (
       !f.name ||
       !f.phone ||
@@ -157,7 +157,7 @@ export default function Profile() {
     return true;
   }
 
-  async function handleLogoAndMap(p: ProfileType) {
+  const handleLogoAndMap = async (p: ProfileType) => {
     let mapURL = p.map || "";
     let logoURL = p.logo || "";
     const mapFile = await createMap({
@@ -195,7 +195,7 @@ export default function Profile() {
     await ProfileAPI.logoAndMapPatch(logoURL, mapURL);
   }
 
-  async function handleSubmit(): Promise<boolean> {
+  const handleSubmit = async (): Promise<boolean> => {
     setErrorMsg("");
     setError(false);
     setLoading(true);
