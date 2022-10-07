@@ -45,7 +45,7 @@ export default function Layout() {
     return profile;
   };
 
-  const loadClient = useCallback(async (force?: boolean) => {
+  const loadClient = useCallback(async () => {
     setLoading(true);
     const getCookie = COOKIES.Decode(cookies.get(COOKIES.NAME));
     if (!getCookie?.sub) {
