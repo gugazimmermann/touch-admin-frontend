@@ -1,9 +1,7 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useContext, useEffect, useState } from "react";
 import Cookies from "universal-cookie";
 import { Outlet, useNavigate } from "react-router-dom";
 import Auth from "../../api/auth";
-// import { Footer, Loading, Nav } from "../../components";
 import { Loading, Nav } from "../../components";
 import { COOKIES } from "../../helpers";
 import { ALERT, CONTEXT, ROUTES } from "../../interfaces/enums";
@@ -14,7 +12,7 @@ import { AlertType, ProfileType } from "../../interfaces/types";
 const cookies = new Cookies();
 
 export default function Layout() {
-  const { state, dispatch } = useContext(AppContext);
+  const { dispatch } = useContext(AppContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -39,7 +37,7 @@ export default function Layout() {
       });
     dispatch({ type: CONTEXT.UPDATE_ALERTS, payload: alerts });
     setLoading(false);
-  }, []);
+  }, [dispatch]);
 
   const seeProfile = async (): Promise<ProfileType> => {
     let profile = await ProfileAPI.get();
@@ -58,11 +56,11 @@ export default function Layout() {
       dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: profile });
       profileAlert(profile);
     setLoading(false);
-  }, []);
+  }, [dispatch, navigate, profileAlert]);
 
   useEffect(() => {
     loadClient();
-  }, []);
+  }, [loadClient]);
 
   return (
     <main className="layout flex flex-col h-screen justify-between container mx-auto max-w-5xl">
@@ -71,7 +69,6 @@ export default function Layout() {
       <div className="layout mb-auto h-full p-4 bg-slate-100">
         <Outlet context={{ loadClient, setLoading }} />
       </div>
-      {/* <Footer /> */}
     </main>
   );
 }

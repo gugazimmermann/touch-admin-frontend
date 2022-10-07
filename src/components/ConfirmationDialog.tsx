@@ -10,7 +10,7 @@ type ConfirmationDialogProps = {
 	children: ReactElement;
 }
 
-export default function ConfirmationDialog({
+const ConfirmationDialog = ({
 	open,
 	setOpen,
 	handleConfirm,
@@ -19,7 +19,7 @@ export default function ConfirmationDialog({
 	confirmText,
 	confirmColor,
 	children,
-}:ConfirmationDialogProps): ReactElement {
+}:ConfirmationDialogProps): ReactElement => {
 	return (
 		<div
 			className={`${
@@ -59,3 +59,5 @@ export default function ConfirmationDialog({
 		</div>
 	);
 }
+
+export default ConfirmationDialog;

@@ -26,6 +26,6 @@ export default function New() {
     handlePlan();
   }, [handlePlan]);
 
-  if (plan && plan.type !== PLANSTYPES.SUBSCRIPTION) return <EventForm plan={plan} />
+  if (plan && plan.type !== PLANSTYPES.SUBSCRIPTION) return <EventForm />
   return <div>SUBSCRIPTION</div>;
 }

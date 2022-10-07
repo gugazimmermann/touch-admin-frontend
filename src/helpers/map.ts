@@ -4,7 +4,7 @@ import { CreateMapType } from "../interfaces/types";
 
 const API_KEY = (process.env.NODE_ENV === 'development' ? process.env.REACT_APP_API_KEY : process.env.REACT_APP_API_KEY_PROD) || "";
 
-export async function createMap({ type, id, name, street, number, city, state, zipCode }: CreateMapType): Promise<File> {
+export const createMap = async ({ type, id, name, street, number, city, state, zipCode }: CreateMapType): Promise<File> => {
 	const color = type === PLANSTYPES.SUBSCRIPTION ? '0xa855f7' : (type === PLANSTYPES.BASIC || type === PLANSTYPES.ADVANCED) ? '0x10b981' : '0xf59e0b';
 	const address = encodeURIComponent(`${street}, ${number} - ${city} - ${state}, ${zipCode}`);
 	const marker = `markers=color:${color}%7Clabel:${name}%7C${address}`;

@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useOutletContext } from "react-router-dom";
 import Auth from "../../api/auth";
 import ProfileAPI from "../../api/profile";
 import { Button, Input, Title, Alert, Form } from "../../components";
@@ -9,8 +9,7 @@ import { ROUTES, ALERT } from "../../interfaces/enums";
 import { useOutletContextProfileProps, AlertType } from "../../interfaces/types";
 
 export default function Profile() {
-  const navigate = useNavigate();
-  const { state, dispatch } = useContext(AppContext);
+  const { state } = useContext(AppContext);
   const { loadClient, setLoading } =
     useOutletContext<useOutletContextProfileProps>();
   const [alert, setAlert] = useState<AlertType>({

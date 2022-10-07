@@ -1,15 +1,15 @@
 import { DOCS, FILEERROR } from "../interfaces/enums";
 import { AddressFromCEPType } from "../interfaces/types";
 
-export function validateEmail(email: string) {
+export const validateEmail = (email: string) => {
   const re =
     /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(String(email).toLowerCase());
 }
 
-export async function getAddressFromCEP(
+export const getAddressFromCEP = async (
   zipCode: string
-): Promise<AddressFromCEPType | null> {
+): Promise<AddressFromCEPType | null> => {
   let cleanCep = "";
   if (zipCode.length > 1) cleanCep = zipCode.replace(/\D/g, "");
   if (cleanCep.length === 8) {
@@ -27,7 +27,7 @@ export async function getAddressFromCEP(
   return null;
 }
 
-export function validateFile(files: FileList): FILEERROR | File | null {
+export const validateFile =(files: FileList): FILEERROR | File | null => {
   if (files && files.length) {
     const file = files[0];
     if (file.size > 2 * 1024 * 1024) return FILEERROR.SIZE;
@@ -39,7 +39,7 @@ export function validateFile(files: FileList): FILEERROR | File | null {
   return null;
 }
 
-export function normalizePhone(phone: string | null | undefined, show?: boolean): string {
+export const normalizePhone = (phone: string | null | undefined, show?: boolean): string => {
   if (!phone) return "";
   const currentValue = !show
     ? phone.replace(/[^\d]/g, "")
@@ -59,7 +59,7 @@ export function normalizePhone(phone: string | null | undefined, show?: boolean)
   )}-${currentValue.slice(7, 11)}`;
 }
 
-export function normalizeCPF(value: string): string {
+export const normalizeCPF = (value: string): string => {
   const cvLength = value.length;
   if (cvLength < 3) return value;
   if (cvLength < 6) return `${value.slice(0, 3)}.${value.slice(3)}`;
@@ -71,7 +71,7 @@ export function normalizeCPF(value: string): string {
   )}-${value.slice(9, 11)}`;
 }
 
-export function normalizeCNPJ(value: string): string {
+export const normalizeCNPJ = (value: string): string => {
   const cvLength = value.length;
   if (cvLength < 3) return value;
   if (cvLength < 5) return `${value.slice(0, 2)}.${value.slice(2)}`;
@@ -88,7 +88,7 @@ export function normalizeCNPJ(value: string): string {
   )}/${value.slice(8, 12)}-${value.slice(12, 14)}`;
 }
 
-export function normalizeDocument(type: DOCS, document: string): string {
+export const normalizeDocument = (type: DOCS, document: string): string => {
   if (!type || !document) return "";
   const currentValue = document.replace(/[^\d]/g, "");
   const doc =
@@ -98,7 +98,7 @@ export function normalizeDocument(type: DOCS, document: string): string {
   return doc;
 }
 
-export function normalizeCEP(cep: string): string {
+export const normalizeCEP = (cep: string): string => {
   if (!cep) return "";
   const currentValue = cep.replace(/[^\d]/g, "");
   const cvLength = currentValue.length;
@@ -111,7 +111,7 @@ export function normalizeCEP(cep: string): string {
   )}-${currentValue.slice(5, 8)}`;
 }
 
-export function normalizeWebsite(w: string): string {
+export const normalizeWebsite = (w: string): string => {
   if (!w) return "";
   if (w.charAt(0).toLocaleLowerCase() !== "h") w = `http://${w}`;
   if (w.charAt(w.length - 1) === "/") w = w.slice(0, -1);
