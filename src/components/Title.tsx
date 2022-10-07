@@ -2,7 +2,7 @@ import { ReactElement } from "react";
 import { Link } from "react-router-dom";
 
 type TitleProps = {
-  text: string;
+  text: string | undefined;
   className?: string;
   back?: string;
   advanced?: string;
@@ -19,7 +19,7 @@ const Title = ({ text, className, back, advanced }: TitleProps): ReactElement =>
       <h1
         className={`flex-auto ${!className ? "text-base text-center" : className}`}
       >
-        {text.toLocaleUpperCase()}
+        {text && text.toLocaleUpperCase()}
       </h1>
       {advanced && (
         <Link to={advanced} className="flex items-center absolute right-0">
