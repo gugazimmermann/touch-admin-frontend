@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { DateTime } from "luxon";
+import MDEditor from "@uiw/react-md-editor";
+import rehypeSanitize from "rehype-sanitize";
 import {
   ROUTES,
   PLANSTYPES,
@@ -11,6 +13,7 @@ import {
 import {
   getAddressFromCEP,
   normalizeCEP,
+  normalizeWebsite,
   validateEmail,
   validateFile,
 } from "../../helpers";
@@ -31,7 +34,9 @@ import {
 } from "../../interfaces/types";
 import PlansAPI from "../../api/plans";
 import slugify from "slugify";
-import ReferralsAPI from '../../api/referral';
+import ReferralsAPI from "../../api/referral";
+import EventsAPI from "../../api/events";
+import { AppContext } from "../../context";
 
 const initial = {
   name: "",
@@ -45,12 +50,13 @@ const initial = {
   number: "",
   complement: "",
   dates: [],
+  referralCode: "",
   method: "",
   gift: "",
   giftDescription: "",
   prizeDraw: "",
   prizeDrawDescription: "",
-  referralCode: "",
+  description: "",
   map: "",
   logo: "",
 };
@@ -58,8 +64,8 @@ const initial = {
 export default function EventForm() {
   const navigate = useNavigate();
   const params = useParams();
-  const { loadClient, setLoading } =
-    useOutletContext<useOutletContextProfileProps>();
+  const { state } = useContext(AppContext);
+  const { setLoading } = useOutletContext<useOutletContextProfileProps>();
   const [error, setError] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [plan, setPlan] = useState<PlanType>();
@@ -75,7 +81,9 @@ export default function EventForm() {
     setLoading(true);
     if (formEvent.zipCode) {
       try {
-        const address = await getAddressFromCEP(formEvent.zipCode.replace(/\D/g, ""));
+        const address = await getAddressFromCEP(
+          formEvent.zipCode.replace(/\D/g, "")
+        );
         if (address) {
           setFormEvent({
             ...formEvent,
@@ -124,15 +132,12 @@ export default function EventForm() {
     setEventLogo(file);
     setErrorMsg("");
     setError(false);
-  }
+  };
 
   const handleDatesChange = (value: any) => {
     const dates = value.toString().split(",");
-    // const fomartedDates = dates.map((d: string) =>
-    //   DateTime.fromFormat(d, "dd/MM/yyyy").toFormat("yyyy-MM-dd")
-    // );
     setFormEvent({ ...formEvent, dates });
-  }
+  };
 
   const validadeStepOne = (f: EventType) => {
     setErrorMsg("");
@@ -158,7 +163,7 @@ export default function EventForm() {
       return null;
     }
     return true;
-  }
+  };
 
   const validadeStepTwo = async (f: EventType) => {
     setErrorMsg("");
@@ -169,7 +174,7 @@ export default function EventForm() {
       return null;
     }
     if (f.referralCode) {
-      setLoading(true)
+      setLoading(true);
       const upperReferralCode = f.referralCode.toLocaleUpperCase();
       setFormEvent({ ...formEvent, referralCode: upperReferralCode });
       if (!f.referral || f.referral?.code !== upperReferralCode) {
@@ -178,44 +183,59 @@ export default function EventForm() {
           setFormEvent({ ...formEvent, referral });
         } else {
           setFormEvent({ ...formEvent, referralCode: "", referral: undefined });
-          setErrorMsg(`Código de Referência - ${upperReferralCode} - Inválido!`);
+          setErrorMsg(
+            `Código de Referência - ${upperReferralCode} - Inválido!`
+          );
           setError(true);
-          setLoading(false)
+          setLoading(false);
           return null;
         }
       }
-      setLoading(false)
+      setLoading(false);
       return true;
     } else {
       setFormEvent({ ...formEvent, referral: undefined });
     }
     return true;
-  }
+  };
 
-  const handleAdd = async() => {
+  const handleAdd = async () => {
     setErrorMsg("");
     setError(false);
     setLoading(true);
-    // if (!validadeForm({ ...formEvent })) {
-    //   setError(true);
-    //   setLoading(false);
-    //   return false;
-    // }
-    // setFormEvent(initial);
+    let event = JSON.parse(JSON.stringify(formEvent));
+    const fomartedDates = event.dates.map((d: string) =>
+      DateTime.fromFormat(d, "dd/MM/yyyy").toFormat("yyyy-MM-dd")
+    );
+    event = {
+      ...event,
+      profileID: state.profile.profileID,
+      zipCode: event.zipCode ? event.zipCode.replace(/[^\d]/g, "") : "",
+      website: event.website ? normalizeWebsite(event.website || "") : "",
+      dates: fomartedDates,
+      gift: event.gift === 'YES' ? 1 : 0,
+      prizeDraw: event.prizeDraw === 'YES' ? 1 : 0,
+      referral: event.referral,
+    }
+    console.log(event)
+    const teste = await EventsAPI.post(event);
+    console.log(teste);
+    setFormEvent(initial);
+    navigate(ROUTES.HOME);
     setLoading(false);
     return true;
-  }
+  };
 
   const changeStep = async (step: number, f: EventType) => {
     if (step === 1) {
-      setStep(1)
+      setStep(1);
       return true;
-    } else if (step === 2) { 
-      if (validadeStepOne(f)) setStep(2)
+    } else if (step === 2) {
+      if (validadeStepOne(f)) setStep(2);
     } else {
-      if (await validadeStepTwo(f)) setStep(3)
+      if (await validadeStepTwo(f)) setStep(3);
     }
-  }
+  };
 
   const handlePlanType = useCallback((type: PLANSTYPES) => {
     setFormEvent({
@@ -253,7 +273,7 @@ export default function EventForm() {
               : "border-slate-300 text-slate-400"
           }`}
         >
-          <button type="button" onClick={() => changeStep(1, {...formEvent})}>
+          <button type="button" onClick={() => changeStep(1, { ...formEvent })}>
             1 - Dados Gerais
           </button>
         </li>
@@ -264,7 +284,7 @@ export default function EventForm() {
               : "border-slate-300 text-slate-400"
           }`}
         >
-          <button type="button" onClick={() => changeStep(2, {...formEvent})}>
+          <button type="button" onClick={() => changeStep(2, { ...formEvent })}>
             2 - Configurações
           </button>
         </li>
@@ -275,13 +295,13 @@ export default function EventForm() {
               : "border-slate-300 text-slate-400"
           }`}
         >
-          <button type="button" onClick={() => changeStep(3, {...formEvent})}>
+          <button type="button" onClick={() => changeStep(3, { ...formEvent })}>
             3 - Detalhes
           </button>
         </li>
       </ul>
     );
-  }
+  };
 
   const renderStepOne = () => {
     return (
@@ -427,7 +447,7 @@ export default function EventForm() {
         </div>
       </div>
     );
-  }
+  };
 
   const renderStepTwo = () => {
     return (
@@ -443,10 +463,11 @@ export default function EventForm() {
           >
             <>
               <option value="">Método *</option>
-              <option value="SMS">Metódo: SMS</option>
+              <option value="SMS">Metódo: SMS *</option>
               <option value="EMAIL">Metódo: EMAIL</option>
             </>
           </Select>
+          <small>{formEvent.method === "SMS" && "* R$ 0,16 por SMS"}</small>
         </div>
         <div className="w-full md:w-6/12 mb-4">
           <Select
@@ -489,11 +510,14 @@ export default function EventForm() {
             type="text"
             placeholder="Código de Referência"
           />
-          <small>{formEvent.referral && `Referência: ${formEvent.referral.company} / ${formEvent.referral.contact}`}</small>
+          <small>
+            {formEvent.referral &&
+              `Referência: ${formEvent.referral?.company} / ${formEvent.referral?.contact}`}
+          </small>
         </div>
       </div>
     );
-  }
+  };
 
   const renderStepThree = () => {
     return (
@@ -501,9 +525,63 @@ export default function EventForm() {
         <div className="w-full mb-4">
           <InputFile fileName={fileName} handler={(e) => handleFile(e)} />
         </div>
+        {formEvent.gift === "YES" && (
+          <div
+            className={`w-full ${
+              formEvent.prizeDraw === "YES" && "md:w-6/12"
+            } sm:pr-4  mb-4`}
+          >
+            <h4 className="text-center mb-2">
+              Breve descrição do <strong>Brinde</strong>
+            </h4>
+            <MDEditor
+              value={formEvent.giftDescription}
+              onChange={(text) =>
+                setFormEvent({ ...formEvent, giftDescription: text })
+              }
+              previewOptions={{
+                rehypePlugins: [[rehypeSanitize]],
+              }}
+            />
+          </div>
+        )}
+        {formEvent.prizeDraw === "YES" && (
+          <div
+            className={`w-full ${
+              formEvent.gift === "YES" && "md:w-6/12"
+            } sm:pr-4  mb-4`}
+          >
+            <h4 className="text-center mb-2">
+              Breve descrição do <strong>Sorteio Final</strong>
+            </h4>
+            <MDEditor
+              value={formEvent.prizeDrawDescription}
+              onChange={(text) =>
+                setFormEvent({ ...formEvent, prizeDrawDescription: text })
+              }
+              previewOptions={{
+                rehypePlugins: [[rehypeSanitize]],
+              }}
+            />
+          </div>
+        )}
+        <div className="w-full mb-4">
+          <h4 className="text-center mb-2">
+            Breve descrição do <strong>Evento</strong>
+          </h4>
+          <MDEditor
+            value={formEvent.description}
+            onChange={(text) =>
+              setFormEvent({ ...formEvent, description: text })
+            }
+            previewOptions={{
+              rehypePlugins: [[rehypeSanitize]],
+            }}
+          />
+        </div>
       </div>
     );
-  }
+  };
 
   return (
     <>
@@ -525,7 +603,9 @@ export default function EventForm() {
             onClick={() =>
               step < 3 ? changeStep(step + 1, { ...formEvent }) : handleAdd()
             }
-            className={`${ step < 3 ? 'bg-secondary' : 'bg-primary' } px-4 py-1.5 text-sm text-white font-semibold uppercase rounded shadow-md cursor-pointer hover:bg-secondary hover:shadow-md focus:bg-secondary focus:shadow-md focus:outline-none focus:ring-0 active:bg-secondary active:shadow-md transition duration-150 ease-in-out`}
+            className={`${
+              step < 3 ? "bg-secondary" : "bg-primary"
+            } px-4 py-1.5 text-sm text-white font-semibold uppercase rounded shadow-md cursor-pointer hover:bg-secondary hover:shadow-md focus:bg-secondary focus:shadow-md focus:outline-none focus:ring-0 active:bg-secondary active:shadow-md transition duration-150 ease-in-out`}
           >
             {step < 3 ? "Continuar" : "Adicionar Novo Evento"}
           </button>
