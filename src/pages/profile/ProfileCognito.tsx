@@ -28,7 +28,7 @@ export default function Profile() {
   }, [state.profile?.email]);
 
   const loading = () => {
-    setAlert({});
+    setAlert({ type: undefined, text: undefined });
     setLoading(true);
   };
 
