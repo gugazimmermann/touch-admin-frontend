@@ -1,11 +1,6 @@
 import { ReactElement } from "react";
 import { ALERT, MapTypes, PlansFrequency, PLANSTYPES } from "./enums";
 
-export type AlertType = {
-  type?: ALERT;
-  text?: string;
-};
-
 export type useOutletContextProps = {
   setAlert: (alert: AlertType) => void;
   setImage: (text: string) => void;
@@ -21,6 +16,12 @@ export type useOutletContextProps = {
 export type useOutletContextProfileProps = {
   loadClient: (force?: boolean) => void;
   setLoading: (loading?: boolean) => void;
+};
+
+
+export type AlertType = {
+  type?: ALERT;
+  text?: string;
 };
 
 export type LocationType = {
@@ -40,22 +41,20 @@ export type CognitoUserType = {
 
 export type GenericObject = { [key: string]: any };
 
-export type OwnersType = {
-  ownerID?: string;
-  name?: string;
-  email?: string;
-  phone?: string;
+export type UUID = string;
+
+interface IDBDates {
   createdAt?: string;
   updatedAt?: string;
 }
 
-export type ProfileType = {
-  profileID: string;
+export interface IContacts {
   email: string;
   phone?: string;
-  name?: string;
-  documenttype?: string;
-  document?: string;
+  website?: string;
+}
+
+interface IAddress {
   zipCode?: string;
   state?: string;
   city?: string;
@@ -63,12 +62,21 @@ export type ProfileType = {
   street?: string;
   number?: string;
   complement?: string;
-  website?: string;
+}
+
+export interface OwnersType extends IDBDates, IContacts {
+  ownerID?: UUID;
+  name?: string;
+}
+
+export interface ProfileType extends IDBDates, IAddress, IContacts {
+  profileID: UUID;
+  name?: string;
+  documenttype?: string;
+  document?: string;
   map?: string;
   logo?: string;
   owners?: OwnersType[];
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export type AddressFromCEPType = {
@@ -77,15 +85,10 @@ export type AddressFromCEPType = {
   city: string;
 }
 
-export type CreateMapType = {
+export interface CreateMapType extends IAddress {
 	type: MapTypes;
 	id: string;
 	name: string;
-	street: string;
-	number: string;
-	city: string;
-	state: string;
-	zipCode: string;
 }
 
 export type SendPublicFileType = {
@@ -96,7 +99,7 @@ export type SendPublicFileType = {
 }
 
 export type PlanType = {
-  planID: string;
+  planID: UUID;
   name: string;
   type: PLANSTYPES;
   frequency: PlansFrequency;
@@ -113,3 +116,24 @@ export type PlansModalType = {
   plan: PlanType;
   info: PlansCardInfoType;
 };
+
+export interface ReferralType extends IDBDates, IAddress, IContacts {
+  referralID: UUID;
+  code: string;
+  company: string;
+  contact: string;
+}
+
+export interface EventType extends IDBDates, IAddress, IContacts {
+  profileID?: UUID;
+  name: string;
+  dates: string[];
+  method: string;
+  gift: string;
+  giftDescription?: string;
+  prizeDraw: string;
+  prizeDrawDescription?: string;
+  referralCode: string;
+  map?: string;
+  logo?: string;
+}
