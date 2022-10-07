@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import Cookies from "universal-cookie";
 import LogoIcon from "../../images/LogoIcon";
-import { AlertType, CognitoUserType } from '../../interfaces/types';
+import { AlertType, CognitoUserType } from "../../interfaces/types";
 import { Alert, Loading, Title } from "../../components";
 import Auth from "../../api/auth";
 import { COOKIES } from "../../helpers";
@@ -13,24 +13,31 @@ const cookies = new Cookies();
 
 export default function AuthLayout() {
   const navigate = useNavigate();
-  const [image, setImage] = useState<string>("");
-  const [title, setTitle] = useState<string>("");
-  const [alert, setAlert] = useState<AlertType>({});
+  const [image, setImage] = useState<string>();
+  const [title, setTitle] = useState<string>();
+  const [alert, setAlert] = useState<AlertType>();
   const [loading, setLoading] = useState(false);
 
   const startLoading = () => {
     setLoading(true);
-    setAlert({});
+    setAlert({ type: undefined, text: undefined });
   };
 
   const stopLoading = () => {
     setLoading(false);
-    setAlert({});
+    setAlert({ type: undefined, text: undefined });
   };
 
-  const setClientCookie = ({sub, locale, email, idToken}: CognitoUserType) => {
+  const setClientCookie = ({
+    sub,
+    locale,
+    email,
+    idToken,
+  }: CognitoUserType) => {
     cookies.remove(COOKIES.NAME);
-    const encodedContent = COOKIES.Encode(JSON.stringify({ sub, locale, email, idToken }));
+    const encodedContent = COOKIES.Encode(
+      JSON.stringify({ sub, locale, email, idToken })
+    );
     const date = new Date();
     date.setDate(date.getDate() + 365);
     cookies.set(COOKIES.NAME, encodedContent, { expires: date, path: "/" });

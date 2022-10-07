@@ -9,7 +9,7 @@ import { ROUTES } from '../../interfaces/enums';
 export default function SignIn() {
   const { setAlert, setImage, setTitle, signIn }: useOutletContextProps = useOutletContext();
   const location: LocationType = useLocation();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(location.state?.email || "");
   const [pwd, setPwd] = useState("");
   const [remember, setRemember] = useState(false);
 
