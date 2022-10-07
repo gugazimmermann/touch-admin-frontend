@@ -1,16 +1,42 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { DateTime } from "luxon";
-import { ROUTES, PLANSTYPES, ALERT, BrazilStates, FILEERROR } from '../../interfaces/enums';
-import { getAddressFromCEP, normalizeCEP, validateEmail, validateFile } from "../../helpers";
+import {
+  ROUTES,
+  PLANSTYPES,
+  ALERT,
+  BrazilStates,
+  FILEERROR,
+} from "../../interfaces/enums";
+import {
+  getAddressFromCEP,
+  normalizeCEP,
+  validateEmail,
+  validateFile,
+} from "../../helpers";
 import DatePicker from "react-multi-date-picker";
-import { Form, Input, Select, InputFile, Uploading, Title, Alert } from "../../components";
-import { PlanType } from "../../interfaces/types";
+import {
+  Form,
+  Input,
+  Select,
+  InputFile,
+  Uploading,
+  Title,
+  Alert,
+} from "../../components";
+import {
+  EventType,
+  PlanType,
+  useOutletContextProfileProps,
+} from "../../interfaces/types";
+import PlansAPI from "../../api/plans";
+import slugify from "slugify";
+import ReferralsAPI from '../../api/referral';
 
 const initial = {
   name: "",
-  website: "",
   email: "",
+  website: "",
   zipCode: "",
   state: "",
   city: "",
@@ -18,66 +44,68 @@ const initial = {
   street: "",
   number: "",
   complement: "",
-  referralCode: "",
   dates: [],
   method: "",
   gift: "",
   giftDescription: "",
   prizeDraw: "",
   prizeDrawDescription: "",
+  referralCode: "",
+  map: "",
+  logo: "",
 };
 
-type EventFormProps = {
-  plan: PlanType;
-};
-
-export default function EventForm({ plan }: EventFormProps) {
+export default function EventForm() {
   const navigate = useNavigate();
   const params = useParams();
+  const { loadClient, setLoading } =
+    useOutletContext<useOutletContextProfileProps>();
   const [error, setError] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [plan, setPlan] = useState<PlanType>();
   const [step, setStep] = useState(1);
-  const [formEvent, setFormEvent] = useState(initial);
+  const [formEvent, setFormEvent] = useState<EventType>(initial);
   const [eventLogo, setEventLogo] = useState<File>();
-  const [fileName, setFileName] = useState('Logo');
+  const [fileName, setFileName] = useState("Logo");
   const [progress, setProgress] = useState();
 
   const getAddress = useCallback(async () => {
     setErrorMsg("");
     setError(false);
     setLoading(true);
-    try {
-      const address = await getAddressFromCEP(formEvent.zipCode.replace(/\D/g, ""));
-      if (address) {
-        setFormEvent({
-          ...formEvent,
-          state: address.state,
-          city: address.city,
-          street: address.street,
-        });
-      } else {
-        setFormEvent({
-          ...formEvent,
-          state: "",
-          city: "",
-          street: "",
-        });
+    if (formEvent.zipCode) {
+      try {
+        const address = await getAddressFromCEP(formEvent.zipCode.replace(/\D/g, ""));
+        if (address) {
+          setFormEvent({
+            ...formEvent,
+            state: address.state,
+            city: address.city,
+            street: address.street,
+          });
+        } else {
+          setFormEvent({
+            ...formEvent,
+            state: "",
+            city: "",
+            street: "",
+          });
+        }
+      } catch (err: any) {
+        setErrorMsg(err.message);
+        setError(true);
       }
-    } catch (err: any) {
-      setErrorMsg(err.message);
-      setError(true);
     }
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formEvent.zipCode, setLoading]);
 
   useEffect(() => {
-    if (formEvent.zipCode.length === 10) getAddress();
+    if (formEvent.zipCode && formEvent.zipCode.length === 10) getAddress();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formEvent.zipCode]);
 
-  function handleFile(e: React.FormEvent<HTMLInputElement>) {
+  const handleFile = (e: React.FormEvent<HTMLInputElement>) => {
     setErrorMsg("");
     setError(false);
     const file = validateFile((e.target as HTMLInputElement).files as FileList);
@@ -98,65 +126,124 @@ export default function EventForm({ plan }: EventFormProps) {
     setError(false);
   }
 
-  function handleDatesChange(value: any) {
+  const handleDatesChange = (value: any) => {
     const dates = value.toString().split(",");
-    const fomartedDates = dates.map((d: string) =>
-    DateTime.fromFormat(d, "DD-MM-YYYY").toFormat("YYYY-MM-DD")
+    // const fomartedDates = dates.map((d: string) =>
+    //   DateTime.fromFormat(d, "dd/MM/yyyy").toFormat("yyyy-MM-dd")
+    // );
+    setFormEvent({ ...formEvent, dates });
+  }
+
+  const validadeStepOne = (f: EventType) => {
+    setErrorMsg("");
+    setError(false);
+    if (!f.name || !f.zipCode || !f.state || !f.city) {
+      setErrorMsg("Preencha os campos obrigatórios!");
+      setError(true);
+      return null;
+    }
+    if (f.email && !validateEmail(f.email)) {
+      setErrorMsg("E-Mail é Obrigatório!");
+      setError(true);
+      return null;
+    }
+    if (f.zipCode.length < 10) {
+      setErrorMsg("CEP Inválido!");
+      setError(true);
+      return null;
+    }
+    if (!f.dates.length) {
+      setErrorMsg("Datas do Evento é obrigatório!");
+      setError(true);
+      return null;
+    }
+    return true;
+  }
+
+  const validadeStepTwo = async (f: EventType) => {
+    setErrorMsg("");
+    setError(false);
+    if (!f.method || !f.gift || !f.prizeDraw) {
+      setErrorMsg("Preencha os campos obrigatórios!");
+      setError(true);
+      return null;
+    }
+    if (f.referralCode) {
+      setLoading(true)
+      const upperReferralCode = f.referralCode.toLocaleUpperCase();
+      setFormEvent({ ...formEvent, referralCode: upperReferralCode });
+      if (!f.referral || f.referral?.code !== upperReferralCode) {
+        const referral = await ReferralsAPI.getByCode(upperReferralCode);
+        if (referral.referralID) {
+          setFormEvent({ ...formEvent, referral });
+        } else {
+          setFormEvent({ ...formEvent, referralCode: "", referral: undefined });
+          setErrorMsg(`Código de Referência - ${upperReferralCode} - Inválido!`);
+          setError(true);
+          setLoading(false)
+          return null;
+        }
+      }
+      setLoading(false)
+      return true;
+    } else {
+      setFormEvent({ ...formEvent, referral: undefined });
+    }
+    return true;
+  }
+
+  const handleAdd = async() => {
+    setErrorMsg("");
+    setError(false);
+    setLoading(true);
+    // if (!validadeForm({ ...formEvent })) {
+    //   setError(true);
+    //   setLoading(false);
+    //   return false;
+    // }
+    // setFormEvent(initial);
+    setLoading(false);
+    return true;
+  }
+
+  const changeStep = async (step: number, f: EventType) => {
+    if (step === 1) {
+      setStep(1)
+      return true;
+    } else if (step === 2) { 
+      if (validadeStepOne(f)) setStep(2)
+    } else {
+      if (await validadeStepTwo(f)) setStep(3)
+    }
+  }
+
+  const handlePlanType = useCallback((type: PLANSTYPES) => {
+    setFormEvent({
+      ...formEvent,
+      method: type === PLANSTYPES.BASIC ? "EMAIL" : "",
+      gift: type === PLANSTYPES.BASIC ? "NO" : "",
+      prizeDraw: type === PLANSTYPES.BASIC ? "NO" : "",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const getPlans = useCallback(async () => {
+    const plans = await PlansAPI.get();
+    const selectedPlan = plans.find(
+      (p) => slugify(p.name, { lower: true }) === params.name
     );
-    setFormEvent({ ...formEvent, dates: fomartedDates });
-  }
-
-  function changeStep() {
-  	setErrorMsg('');
-  	setError(false);
-  	setLoading(true);
-  	if (!formEvent.name || !formEvent.zipCode || !formEvent.state || !formEvent.city) {
-  		setErrorMsg('Preencha os campos obrigatórios!');
-  		setError(true);
-  		setLoading(false);
-  		return null;
-  	}
-  	if (formEvent.email && !validateEmail(formEvent.email)) {
-  		setErrorMsg('E-Mail é Obrigatório!');
-  		setError(true);
-  		setLoading(false);
-  		return null;
-  	}
-  	if (formEvent.zipCode.length < 10) {
-  		setErrorMsg('CEP Inválido!');
-  		setError(true);
-  		setLoading(false);
-  		return null;
-  	}
-  	setLoading(false);
-  	setStep(2);
-  	return true;
-  }
-
-  async function handleAdd() {
-  	setErrorMsg('');
-  	setError(false);
-  	setLoading(true);
-  	setFormEvent(initial);
-  	setLoading(false);
-  	return true;
-  }
+    if (!selectedPlan) navigate(ROUTES.NEW);
+    else {
+      setPlan(selectedPlan);
+      handlePlanType(selectedPlan.type);
+    }
+  }, [handlePlanType, navigate, params.name]);
 
   useEffect(() => {
-    const handleEventType = (type: PLANSTYPES) => {
-      setFormEvent({
-        ...formEvent,
-        method: type === PLANSTYPES.BASIC ? "EMAIL" : "",
-        gift: type === PLANSTYPES.BASIC ? "NO" : "",
-        prizeDraw: type === PLANSTYPES.BASIC ? "NO" : "",
-      });
-    };
-    if (!plan) navigate(ROUTES.HOME);
-    else handleEventType(plan.type);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, plan]);
+    getPlans();
+  }, [getPlans]);
 
-  function renderStepFlow() {
+  const renderStepFlow = () => {
     return (
       <ul className="flex flex-col sm:flex-row w-full gap-4 sm:gap-0 justify-evenly mx-auto mb-4">
         <li
@@ -166,7 +253,7 @@ export default function EventForm({ plan }: EventFormProps) {
               : "border-slate-300 text-slate-400"
           }`}
         >
-          <button type="button" onClick={() => setStep(1)}>
+          <button type="button" onClick={() => changeStep(1, {...formEvent})}>
             1 - Dados Gerais
           </button>
         </li>
@@ -177,15 +264,26 @@ export default function EventForm({ plan }: EventFormProps) {
               : "border-slate-300 text-slate-400"
           }`}
         >
-          <button type="button" onClick={() => setStep(2)}>
-            2 - Detalhes do Evento
+          <button type="button" onClick={() => changeStep(2, {...formEvent})}>
+            2 - Configurações
+          </button>
+        </li>
+        <li
+          className={`border-b-2 px-4 ${
+            step === 3
+              ? "border-primary font-bold"
+              : "border-slate-300 text-slate-400"
+          }`}
+        >
+          <button type="button" onClick={() => changeStep(3, {...formEvent})}>
+            3 - Detalhes
           </button>
         </li>
       </ul>
     );
   }
 
-  function renderStepOne() {
+  const renderStepOne = () => {
     return (
       <div className="flex flex-wrap w-full">
         <div className="w-full md:w-4/12 sm:pr-4 mb-4">
@@ -193,7 +291,9 @@ export default function EventForm({ plan }: EventFormProps) {
             type="text"
             placeholder="Nome *"
             value={formEvent.name || ""}
-            handler={(e) => setFormEvent({ ...formEvent, name: e.target.value })}
+            handler={(e) =>
+              setFormEvent({ ...formEvent, name: e.target.value })
+            }
           />
         </div>
         <div className="w-full md:w-4/12 sm:pr-4 mb-4">
@@ -201,7 +301,9 @@ export default function EventForm({ plan }: EventFormProps) {
             type="text"
             value={formEvent.email || ""}
             placeholder="Email"
-            disabled
+            handler={(e) =>
+              setFormEvent({ ...formEvent, email: e.target.value })
+            }
           />
         </div>
         <div className="w-full md:w-4/12 mb-4">
@@ -209,7 +311,9 @@ export default function EventForm({ plan }: EventFormProps) {
             type="text"
             value={formEvent.website || ""}
             placeholder="WebSite"
-            handler={(e) => setFormEvent({ ...formEvent, website: e.target.value })}
+            handler={(e) =>
+              setFormEvent({ ...formEvent, website: e.target.value })
+            }
           />
         </div>
         <div className="w-full md:w-4/12 sm:pr-4 mb-4">
@@ -217,7 +321,11 @@ export default function EventForm({ plan }: EventFormProps) {
             type="text"
             value={formEvent.zipCode || ""}
             placeholder="CEP *"
-            handler={(e) => setFormEvent({ ...formEvent, zipCode: normalizeCEP(e.target.value) })
+            handler={(e) =>
+              setFormEvent({
+                ...formEvent,
+                zipCode: normalizeCEP(e.target.value),
+              })
             }
           />
         </div>
@@ -225,7 +333,9 @@ export default function EventForm({ plan }: EventFormProps) {
           <Select
             placeholder="Estado"
             value={formEvent.state || ""}
-            handler={(e) => setFormEvent({ ...formEvent, state: e.target.value })}
+            handler={(e) =>
+              setFormEvent({ ...formEvent, state: e.target.value })
+            }
           >
             <>
               <option value="">Estado *</option>
@@ -242,7 +352,9 @@ export default function EventForm({ plan }: EventFormProps) {
             type="text"
             value={formEvent.city || ""}
             placeholder="Cidade *"
-            handler={(e) => setFormEvent({ ...formEvent, city: e.target.value })}
+            handler={(e) =>
+              setFormEvent({ ...formEvent, city: e.target.value })
+            }
           />
         </div>
         <div className="w-full md:w-4/12 sm:pr-4 mb-4">
@@ -250,7 +362,9 @@ export default function EventForm({ plan }: EventFormProps) {
             type="text"
             value={formEvent.district || ""}
             placeholder="Bairro"
-            handler={(e) => setFormEvent({ ...formEvent, district: e.target.value })}
+            handler={(e) =>
+              setFormEvent({ ...formEvent, district: e.target.value })
+            }
           />
         </div>
         <div className="w-full md:w-4/12 sm:pr-4 mb-4">
@@ -258,7 +372,9 @@ export default function EventForm({ plan }: EventFormProps) {
             type="text"
             value={formEvent.street || ""}
             placeholder="Rua"
-            handler={(e) => setFormEvent({ ...formEvent, street: e.target.value })}
+            handler={(e) =>
+              setFormEvent({ ...formEvent, street: e.target.value })
+            }
           />
         </div>
         <div className="w-full md:w-4/12 mb-4">
@@ -266,7 +382,9 @@ export default function EventForm({ plan }: EventFormProps) {
             type="text"
             value={formEvent.number || ""}
             placeholder="Número"
-            handler={(e) => setFormEvent({ ...formEvent, number: e.target.value })}
+            handler={(e) =>
+              setFormEvent({ ...formEvent, number: e.target.value })
+            }
           />
         </div>
         <div className="w-full md:w-4/12 sm:pr-4 mb-4">
@@ -274,95 +392,95 @@ export default function EventForm({ plan }: EventFormProps) {
             type="text"
             value={formEvent.complement || ""}
             placeholder="Complemento"
-            handler={(e) => setFormEvent({ ...formEvent, complement: e.target.value })}
+            handler={(e) =>
+              setFormEvent({ ...formEvent, complement: e.target.value })
+            }
           />
         </div>
         <div className="w-full md:w-8/12 mb-4">
           <DatePicker
             onChange={handleDatesChange}
+            value={formEvent.dates}
             format="DD/MM/YYYY"
             multiple
-            weekDays={['D', 'S', 'T', 'Q', 'Q', 'S', 'S']}
+            weekDays={["D", "S", "T", "Q", "Q", "S", "S"]}
             months={[
-              'Janeiro',
-              'Fevereiro',
-              'Março',
-              'Abril',
-              'Maio',
-              'Junho',
-              'Julho',
-              'Agosto',
-              'Setembro',
-              'Outubro',
-              'Novembro',
-              'Dezembro',
+              "Janeiro",
+              "Fevereiro",
+              "Março",
+              "Abril",
+              "Maio",
+              "Junho",
+              "Julho",
+              "Agosto",
+              "Setembro",
+              "Outubro",
+              "Novembro",
+              "Dezembro",
             ]}
             minDate={new Date()}
             style={{
               height: "40px",
             }}
-            placeholder="Datas do Evento"
+            placeholder="Datas do Evento *"
           />
         </div>
       </div>
     );
   }
 
-  function renderStepTwo() {
+  const renderStepTwo = () => {
     return (
       <div className="flex flex-wrap w-full">
         <div className="w-full md:w-6/12 sm:pr-4 mb-4">
-        <InputFile fileName={fileName} handler={(e) => handleFile(e)} />
-        </div>
-        <div className="w-full md:w-6/12 mb-4">
           <Select
             value={formEvent.method || ""}
             handler={(e) =>
               setFormEvent({ ...formEvent, method: e.target.value })
             }
-            disabled={plan.type.toLocaleLowerCase() === "basic"}
-            placeholder='Método'
+            disabled={plan?.type.toLocaleLowerCase() === "basic"}
+            placeholder="Método"
           >
             <>
               <option value="">Método *</option>
-              <option value="SMS">SMS</option>
-              <option value="EMAIL">EMAIL</option>
-            </>
-          </Select>
-        </div>
-        <div className="w-full md:w-6/12 sm:pr-4 mb-4">
-          <Select
-            value={formEvent.gift || ""}
-            handler={(e) =>
-              setFormEvent({ ...formEvent, gift: e.target.value })
-            }
-            disabled={plan.type.toLocaleLowerCase() === "basic"}
-            placeholder='Brinde?*'
-          >
-            <>
-              <option value="">Brinde *</option>
-              <option value="YES">Sim</option>
-              <option value="NO">Não</option>
+              <option value="SMS">Metódo: SMS</option>
+              <option value="EMAIL">Metódo: EMAIL</option>
             </>
           </Select>
         </div>
         <div className="w-full md:w-6/12 mb-4">
           <Select
-            value={formEvent.prizeDraw || ""}
+            value={formEvent.gift || ""}
             handler={(e) =>
-              setFormEvent({ ...formEvent, prizeDraw: e.target.value })
+              setFormEvent({ ...formEvent, gift: e.target.value })
             }
-            disabled={plan.type.toLocaleLowerCase() === "basic"}
-            placeholder="Sorteio Final?*"
+            disabled={plan?.type.toLocaleLowerCase() === "basic"}
+            placeholder="Brinde?*"
           >
             <>
-              <option value="">Sorteio Final?*</option>
-              <option value="YES">Sim</option>
-              <option value="NO">Não</option>
+              <option value="">Brinde *</option>
+              <option value="YES">Brinde: Sim</option>
+              <option value="NO">Brinde: Não</option>
             </>
           </Select>
         </div>
         <div className="w-full md:w-6/12 sm:pr-4 mb-4">
+          <Select
+            value={formEvent.prizeDraw || ""}
+            handler={(e) =>
+              setFormEvent({ ...formEvent, prizeDraw: e.target.value })
+            }
+            disabled={plan?.type.toLocaleLowerCase() === "basic"}
+            placeholder="Sorteio Final?*"
+          >
+            <>
+              <option value="">Sorteio Final? *</option>
+              <option value="YES">Sorteio Final: Sim</option>
+              <option value="NO">Sorteio Final: Não</option>
+            </>
+          </Select>
+        </div>
+        <div className="w-full md:w-6/12 mb-4">
           <Input
             value={formEvent.referralCode || ""}
             handler={(e) =>
@@ -371,6 +489,17 @@ export default function EventForm({ plan }: EventFormProps) {
             type="text"
             placeholder="Código de Referência"
           />
+          <small>{formEvent.referral && `Referência: ${formEvent.referral.company} / ${formEvent.referral.contact}`}</small>
+        </div>
+      </div>
+    );
+  }
+
+  const renderStepThree = () => {
+    return (
+      <div className="flex flex-wrap w-full">
+        <div className="w-full mb-4">
+          <InputFile fileName={fileName} handler={(e) => handleFile(e)} />
         </div>
       </div>
     );
@@ -380,7 +509,7 @@ export default function EventForm({ plan }: EventFormProps) {
     <>
       {!!progress && <Uploading progress={progress} />}
       <Title
-        text='Novo Evento'
+        text={`Novo Evento - ${plan?.name}`}
         back={ROUTES.NEW}
         className="font-bold text-center"
       />
@@ -389,15 +518,18 @@ export default function EventForm({ plan }: EventFormProps) {
         {renderStepFlow()}
         {step === 1 && renderStepOne()}
         {step === 2 && renderStepTwo()}
+        {step === 3 && renderStepThree()}
         <div className="w-full flex justify-center">
-					<button
-						type="button"
-						onClick={() => (step === 1 ? changeStep() : handleAdd())}
-						className="bg-primary px-4 py-1.5 text-sm text-white font-semibold uppercase rounded shadow-md cursor-pointer hover:bg-secondary hover:shadow-md focus:bg-secondary focus:shadow-md focus:outline-none focus:ring-0 active:bg-secondary active:shadow-md transition duration-150 ease-in-out"
-					>
-						{step === 1 ? 'Continuar' : 'Adicionar Novo Evento'}
-					</button>
-				</div>
+          <button
+            type="button"
+            onClick={() =>
+              step < 3 ? changeStep(step + 1, { ...formEvent }) : handleAdd()
+            }
+            className={`${ step < 3 ? 'bg-secondary' : 'bg-primary' } px-4 py-1.5 text-sm text-white font-semibold uppercase rounded shadow-md cursor-pointer hover:bg-secondary hover:shadow-md focus:bg-secondary focus:shadow-md focus:outline-none focus:ring-0 active:bg-secondary active:shadow-md transition duration-150 ease-in-out`}
+          >
+            {step < 3 ? "Continuar" : "Adicionar Novo Evento"}
+          </button>
+        </div>
       </Form>
     </>
   );
