@@ -22,22 +22,25 @@ export default function Layout() {
     navigate(ROUTES.SIGNIN);
   }, [navigate]);
 
-  const profileAlert = useCallback((profile: ProfileType) => {
-    setLoading(true);
-    const alerts = [] as AlertType[];
-    if (!profile?.phone)
-      alerts.push({
-        type: ALERT.WARNING,
-        text: "Seu cadastro está incompleto, finalize para utilizar o sistema.",
-      });
-    if (!profile?.owners || !profile.owners.length)
-      alerts.push({
-        type: ALERT.WARNING,
-        text: "Nenhum responsável cadastrado!",
-      });
-    dispatch({ type: CONTEXT.UPDATE_ALERTS, payload: alerts });
-    setLoading(false);
-  }, [dispatch]);
+  const profileAlert = useCallback(
+    (profile: ProfileType) => {
+      setLoading(true);
+      const alerts = [] as AlertType[];
+      if (!profile?.phone)
+        alerts.push({
+          type: ALERT.WARNING,
+          text: "Seu cadastro está incompleto, finalize para utilizar o sistema.",
+        });
+      if (!profile?.owners || !profile.owners.length)
+        alerts.push({
+          type: ALERT.WARNING,
+          text: "Nenhum responsável cadastrado!",
+        });
+      dispatch({ type: CONTEXT.UPDATE_ALERTS, payload: alerts });
+      setLoading(false);
+    },
+    [dispatch]
+  );
 
   const seeProfile = async (): Promise<ProfileType> => {
     let profile = await ProfileAPI.get();
@@ -52,9 +55,9 @@ export default function Layout() {
       navigate(ROUTES.SIGNIN);
       return;
     }
-      const profile = await seeProfile();
-      dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: profile });
-      profileAlert(profile);
+    const profile = await seeProfile();
+    dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: profile });
+    profileAlert(profile);
     setLoading(false);
   }, [dispatch, navigate, profileAlert]);
 

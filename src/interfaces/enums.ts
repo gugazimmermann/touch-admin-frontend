@@ -8,7 +8,9 @@ export enum ROUTES {
   PROFILE = "/perfil",
   PROFILE_ADVANCED = "/perfil/avancado",
   ALERTS = "/alertas",
-  NEW = "/novo"
+  NEW = "/novo",
+  EVENTS = "/eventos",
+  SUBSCRIPTIONS = "/assinaturas"
 }
 
 export const BrazilStates = [

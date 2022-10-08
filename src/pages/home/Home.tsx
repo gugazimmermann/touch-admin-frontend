@@ -1,12 +1,10 @@
-import { useContext } from 'react';
-import { AppContext } from '../../context';
+import { PLANSTYPES } from '../../interfaces/enums';
+import DashboardRow from '../dashboard/DashboardRow';
 
-export default function Home() {
-  const { state } = useContext(AppContext);
-
-  return (
-    <section>
-      <pre>{JSON.stringify(state, undefined, 2)}</pre>
-    </section>
-  );
+export default function Dashboard() {
+	return (
+		<div className="grid gap-4">
+      <DashboardRow type={PLANSTYPES.ADVANCED} />
+		</div>
+	);
 }

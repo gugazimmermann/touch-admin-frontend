@@ -12,7 +12,6 @@ type NavProfileProps = {
 
 const LOGO_MAPS_BUCKET = process.env.REACT_APP_LOGO_MAPS_BUCKET || "";
 
-
 const NavProfile = ({ handleSignOut, qtd }: NavProfileProps): ReactElement => {
   const { state } = useContext(AppContext);
   const location = useLocation();
