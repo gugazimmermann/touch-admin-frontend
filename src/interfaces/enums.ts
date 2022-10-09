@@ -10,7 +10,7 @@ export enum ROUTES {
   ALERTS = "/alertas",
   NEW = "/novo",
   EVENTS = "/eventos",
-  SUBSCRIPTIONS = "/assinaturas"
+  SUBSCRIPTIONS = "/assinaturas",
 }
 
 export const BrazilStates = [
@@ -41,6 +41,23 @@ export const BrazilStates = [
   { value: "SP", name: "São Paulo" },
   { value: "SE", name: "Sergipe" },
   { value: "TO", name: "Tocantins" },
+];
+
+export const BrazilWeekDays = ["D", "S", "T", "Q", "Q", "S", "S"];
+
+export const BrazilMonths = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
 ];
 
 export enum ALERT {
@@ -84,5 +101,5 @@ export type MapTypes = PLANSTYPES | MAP;
 
 export enum PlansFrequency {
   SINGLE = "SINGLE",
-  MONTHLY = "MONTHLY"
+  MONTHLY = "MONTHLY",
 }

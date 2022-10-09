@@ -1,35 +1,21 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { DateTime } from "luxon";
-import MDEditor from "@uiw/react-md-editor";
-import rehypeSanitize from "rehype-sanitize";
 import {
   ROUTES,
   PLANSTYPES,
   ALERT,
-  BrazilStates,
   FILEERROR,
   FILETYPES,
 } from "../../interfaces/enums";
 import {
   createMap,
   getAddressFromCEP,
-  normalizeCEP,
   normalizeWebsite,
   validateEmail,
   validateFile,
 } from "../../helpers";
-import DatePicker from "react-multi-date-picker";
-import {
-  Form,
-  Input,
-  Select,
-  InputFile,
-  Uploading,
-  Title,
-  Alert,
-  LoadingSmall,
-} from "../../components";
+import { Form, Uploading, Title, Alert, LoadingSmall } from "../../components";
 import {
   EventType,
   PlanType,
@@ -41,8 +27,13 @@ import ReferralsAPI from "../../api/referral";
 import EventsAPI from "../../api/events";
 import { AppContext } from "../../context";
 import { sendPublicFile } from "../../api/storage";
+import { ReferralType } from "../../interfaces/types";
+import EventsFormStepOne from "./EventsFormStepOne";
+import EventFormStepTwo from "./EventFormStepTwo";
+import EventFormStepThree from "./EventFormStepThree";
+import EventFormFlow from "./EventFormFlow";
 
-const initial = {
+const initial: EventType = {
   name: "",
   email: "",
   website: "",
@@ -138,30 +129,53 @@ export default function EventForm() {
     setError(false);
   };
 
-  const handleDatesChange = (value: any) => {
-    const dates = value.toString().split(",");
-    setFormEvent({ ...formEvent, dates });
+  const validadeReferralCode = async () => {
+    setLoading(true);
+    const referralCode = (formEvent?.referralCode || "").toLocaleUpperCase();
+    setFormEvent({ ...formEvent, referralCode });
+    if (
+      !formEvent.referral ||
+      (formEvent.referral && formEvent.referral.code !== referralCode)
+    ) {
+      const referral = await ReferralsAPI.getByCode(referralCode);
+      if (referral.referralID) {
+        setFormEvent({ ...formEvent, referral });
+      } else {
+        setFormEvent({ ...formEvent, referralCode: "", referral: undefined });
+        setErrorMsg(`Código de Referência - ${referralCode} - Inválido!`);
+        setError(true);
+        setLoading(false);
+        return null;
+      }
+    }
+    setLoading(false);
+    return true;
   };
 
-  const validadeStepOne = (f: EventType) => {
+  const validadeStepOne = () => {
     setErrorMsg("");
     setError(false);
-    if (!f.name || !f.zipCode || !f.state || !f.city) {
+    if (
+      !formEvent.name ||
+      !formEvent.zipCode ||
+      !formEvent.state ||
+      !formEvent.city
+    ) {
       setErrorMsg("Preencha os campos obrigatórios!");
       setError(true);
       return null;
     }
-    if (f.email && !validateEmail(f.email)) {
+    if (formEvent.email && !validateEmail(formEvent.email)) {
       setErrorMsg("E-Mail é Obrigatório!");
       setError(true);
       return null;
     }
-    if (f.zipCode.length < 10) {
+    if (formEvent.zipCode.length < 10) {
       setErrorMsg("CEP Inválido!");
       setError(true);
       return null;
     }
-    if (plan?.type !== PLANSTYPES.SUBSCRIPTION && !f.dates.length) {
+    if (plan?.type !== PLANSTYPES.SUBSCRIPTION && !formEvent.dates.length) {
       setErrorMsg("Datas do Evento é obrigatório!");
       setError(true);
       return null;
@@ -169,33 +183,16 @@ export default function EventForm() {
     return true;
   };
 
-  const validadeStepTwo = async (f: EventType) => {
+  const validadeStepTwo = async () => {
     setErrorMsg("");
     setError(false);
-    if (!f.method || !f.gift || !f.prizeDraw) {
+    if (!formEvent.method || !formEvent.gift || !formEvent.prizeDraw) {
       setErrorMsg("Preencha os campos obrigatórios!");
       setError(true);
       return null;
     }
-    if (f.referralCode) {
-      setLoading(true);
-      const upperReferralCode = f.referralCode.toLocaleUpperCase();
-      setFormEvent({ ...formEvent, referralCode: upperReferralCode });
-      if (!f.referral || f.referral?.code !== upperReferralCode) {
-        const referral = await ReferralsAPI.getByCode(upperReferralCode);
-        if (referral.referralID) {
-          setFormEvent({ ...formEvent, referral });
-        } else {
-          setFormEvent({ ...formEvent, referralCode: "", referral: undefined });
-          setErrorMsg(
-            `Código de Referência - ${upperReferralCode} - Inválido!`
-          );
-          setError(true);
-          setLoading(false);
-          return null;
-        }
-      }
-      setLoading(false);
+    if (formEvent.referralCode) {
+      await validadeReferralCode();
       return true;
     } else {
       setFormEvent({ ...formEvent, referral: undefined });
@@ -243,15 +240,21 @@ export default function EventForm() {
     setErrorMsg("");
     setError(false);
     setLoading(true);
-    const fomartedDates = formEvent.dates.map((d: string) => DateTime.fromFormat(d, "dd/MM/yyyy").toFormat("yyyy-MM-dd"));
+    if (plan?.type !== PLANSTYPES.ADVANCED)
+      if (formEvent.referralCode && !(await validadeReferralCode())) return;
+    const fomartedDates = formEvent.dates.map((d: string) =>
+      DateTime.fromFormat(d, "dd/MM/yyyy").toFormat("yyyy-MM-dd")
+    );
     const event = await EventsAPI.post({
       ...formEvent,
       profileID: state.profile.profileID,
       planType: plan?.type,
       plan: plan,
-      profileIDPlanType: `${state.profile.profileID}#${plan?.type}`,
+      "profileID#PlanType": `${state.profile.profileID}#${plan?.type}`,
       zipCode: formEvent.zipCode ? formEvent.zipCode.replace(/[^\d]/g, "") : "",
-      website: formEvent.website ? normalizeWebsite(formEvent.website || "") : "",
+      website: formEvent.website
+        ? normalizeWebsite(formEvent.website || "")
+        : "",
       dates: fomartedDates,
       gift: formEvent.gift === "Não" ? 0 : 1,
       prizeDraw: formEvent.prizeDraw === "Não" ? 0 : 1,
@@ -264,15 +267,14 @@ export default function EventForm() {
     return true;
   };
 
-  const changeStep = async (step: number, f: EventType) => {
-    if (step === 1) {
-      setStep(1);
-      return true;
-    } else if (step === 2) {
-      if (validadeStepOne(f)) setStep(2);
+  const changeStep = async (step: number) => {
+    if (plan?.type === PLANSTYPES.ADVANCED) {
+      if (step === 2) if (!validadeStepOne()) return;
+      if (step === 3) if (!(await validadeStepTwo())) return;
     } else {
-      if (await validadeStepTwo(f)) setStep(3);
+      if (step === 3) if (!validadeStepOne()) return;
     }
+    setStep(step);
   };
 
   const handlePlanType = useCallback((type: PLANSTYPES) => {
@@ -305,355 +307,6 @@ export default function EventForm() {
     getPlans();
   }, [getPlans]);
 
-  const renderStepFlow = () => {
-    return (
-      <ul className="flex flex-col sm:flex-row w-full gap-4 sm:gap-0 justify-evenly mx-auto mb-4">
-        <li
-          className={`border-b-2 px-4 ${
-            step === 1
-              ? "border-primary font-bold"
-              : "border-slate-300 text-slate-400"
-          }`}
-        >
-          <button type="button" onClick={() => changeStep(1, { ...formEvent })}>
-            Dados Gerais
-          </button>
-        </li>
-        {plan?.type === PLANSTYPES.ADVANCED && (
-          <li
-            className={`border-b-2 px-4 ${
-              step === 2
-                ? "border-primary font-bold"
-                : "border-slate-300 text-slate-400"
-            }`}
-          >
-            <button
-              type="button"
-              onClick={() => changeStep(2, { ...formEvent })}
-            >
-              Configurações
-            </button>
-          </li>
-        )}
-        <li
-          className={`border-b-2 px-4 ${
-            step === 3
-              ? "border-primary font-bold"
-              : "border-slate-300 text-slate-400"
-          }`}
-        >
-          <button type="button" onClick={() => changeStep(3, { ...formEvent })}>
-            Detalhes
-          </button>
-        </li>
-      </ul>
-    );
-  };
-
-  const renderStepOne = () => {
-    return (
-      <div className="flex flex-wrap w-full">
-        <div className="w-full md:w-4/12 sm:pr-4 mb-4">
-          <Input
-            type="text"
-            placeholder="Nome *"
-            value={formEvent.name || ""}
-            handler={(e) =>
-              setFormEvent({ ...formEvent, name: e.target.value })
-            }
-          />
-        </div>
-        <div className="w-full md:w-4/12 sm:pr-4 mb-4">
-          <Input
-            type="text"
-            value={formEvent.email || ""}
-            placeholder="Email"
-            handler={(e) =>
-              setFormEvent({ ...formEvent, email: e.target.value })
-            }
-          />
-        </div>
-        <div className="w-full md:w-4/12 mb-4">
-          <Input
-            type="text"
-            value={formEvent.website || ""}
-            placeholder="WebSite"
-            handler={(e) =>
-              setFormEvent({ ...formEvent, website: e.target.value })
-            }
-          />
-        </div>
-        <div className="w-full md:w-4/12 sm:pr-4 mb-4">
-          <Input
-            type="text"
-            value={formEvent.zipCode || ""}
-            placeholder="CEP *"
-            handler={(e) =>
-              setFormEvent({
-                ...formEvent,
-                zipCode: normalizeCEP(e.target.value),
-              })
-            }
-          />
-        </div>
-        <div className="w-full md:w-4/12 sm:pr-4 mb-4">
-          <Select
-            placeholder="Estado"
-            value={formEvent.state || ""}
-            handler={(e) =>
-              setFormEvent({ ...formEvent, state: e.target.value })
-            }
-          >
-            <>
-              <option value="">Estado *</option>
-              {BrazilStates.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.name}
-                </option>
-              ))}
-            </>
-          </Select>
-        </div>
-        <div className="w-full md:w-4/12 mb-4">
-          <Input
-            type="text"
-            value={formEvent.city || ""}
-            placeholder="Cidade *"
-            handler={(e) =>
-              setFormEvent({ ...formEvent, city: e.target.value })
-            }
-          />
-        </div>
-        <div className="w-full md:w-4/12 sm:pr-4 mb-4">
-          <Input
-            type="text"
-            value={formEvent.district || ""}
-            placeholder="Bairro"
-            handler={(e) =>
-              setFormEvent({ ...formEvent, district: e.target.value })
-            }
-          />
-        </div>
-        <div className="w-full md:w-4/12 sm:pr-4 mb-4">
-          <Input
-            type="text"
-            value={formEvent.street || ""}
-            placeholder="Rua"
-            handler={(e) =>
-              setFormEvent({ ...formEvent, street: e.target.value })
-            }
-          />
-        </div>
-        <div className="w-full md:w-4/12 mb-4">
-          <Input
-            type="text"
-            value={formEvent.number || ""}
-            placeholder="Número"
-            handler={(e) =>
-              setFormEvent({ ...formEvent, number: e.target.value })
-            }
-          />
-        </div>
-        <div className="w-full md:w-4/12 sm:pr-4 mb-4">
-          <Input
-            type="text"
-            value={formEvent.complement || ""}
-            placeholder="Complemento"
-            handler={(e) =>
-              setFormEvent({ ...formEvent, complement: e.target.value })
-            }
-          />
-        </div>
-        {plan?.type !== PLANSTYPES.SUBSCRIPTION && (
-          <div className="w-full md:w-8/12 mb-4">
-            <DatePicker
-              onChange={handleDatesChange}
-              value={formEvent.dates}
-              format="DD/MM/YYYY"
-              multiple
-              weekDays={["D", "S", "T", "Q", "Q", "S", "S"]}
-              months={[
-                "Janeiro",
-                "Fevereiro",
-                "Março",
-                "Abril",
-                "Maio",
-                "Junho",
-                "Julho",
-                "Agosto",
-                "Setembro",
-                "Outubro",
-                "Novembro",
-                "Dezembro",
-              ]}
-              minDate={new Date()}
-              style={{
-                height: "40px",
-              }}
-              placeholder="Datas do Evento *"
-            />
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderStepTwo = () => {
-    return (
-      <div className="flex flex-wrap w-full">
-        <div className="w-full md:w-6/12 sm:pr-4 mb-4">
-          <Select
-            value={formEvent.method || ""}
-            handler={(e) =>
-              setFormEvent({ ...formEvent, method: e.target.value })
-            }
-            disabled={plan?.type !== PLANSTYPES.ADVANCED}
-            placeholder="Método"
-          >
-            <>
-              <option value="">Método *</option>
-              <option value="SMS">SMS</option>
-              <option value="EMAIL">EMAIL</option>
-            </>
-          </Select>
-          <small>{formEvent.method === "SMS" && "* R$ 0,16 por SMS"}</small>
-        </div>
-        <div className="w-full md:w-6/12 mb-4">
-          <Select
-            value={formEvent.gift || ""}
-            handler={(e) =>
-              setFormEvent({ ...formEvent, gift: e.target.value })
-            }
-            disabled={plan?.type !== PLANSTYPES.ADVANCED}
-            placeholder="Brinde?*"
-          >
-            <>
-              <option value="">Brinde *</option>
-              <option value="Sim">Sim</option>
-              <option value="Não">Não</option>
-            </>
-          </Select>
-        </div>
-        <div className="w-full md:w-6/12 sm:pr-4 mb-4">
-          <Select
-            value={formEvent.prizeDraw || ""}
-            handler={(e) =>
-              setFormEvent({ ...formEvent, prizeDraw: e.target.value })
-            }
-            disabled={plan?.type !== PLANSTYPES.ADVANCED}
-            placeholder="Sorteio Final?*"
-          >
-            <>
-              <option value="">Sorteio Final? *</option>
-              <option value="Sim">Sim</option>
-              <option value="Não">Não</option>
-            </>
-          </Select>
-        </div>
-        <div className="w-full md:w-6/12 mb-4">
-          <Input
-            value={formEvent.referralCode || ""}
-            handler={(e) =>
-              setFormEvent({ ...formEvent, referralCode: e.target.value })
-            }
-            type="text"
-            placeholder="Código de Referência"
-          />
-          <small>
-            {formEvent.referral &&
-              `Referência: ${formEvent.referral?.company} / ${formEvent.referral?.contact}`}
-          </small>
-        </div>
-      </div>
-    );
-  };
-
-  const renderStepThree = () => {
-    return (
-      <div className="flex flex-wrap w-full">
-        {plan?.type !== PLANSTYPES.ADVANCED && (
-          <div className="w-full md:w-6/12 sm:pr-4 mb-4">
-            <Input
-              value={formEvent.referralCode || ""}
-              handler={(e) =>
-                setFormEvent({ ...formEvent, referralCode: e.target.value })
-              }
-              type="text"
-              placeholder="Código de Referência"
-            />
-            <small>
-              {formEvent.referral &&
-                `Referência: ${formEvent.referral?.company} / ${formEvent.referral?.contact}`}
-            </small>
-          </div>
-        )}
-        <div
-          className={`w-full ${
-            plan?.type !== PLANSTYPES.ADVANCED && "md:w-6/12"
-          }  mb-4`}
-        >
-          <InputFile fileName={fileName} handler={(e) => handleFile(e)} />
-        </div>
-        {formEvent.gift === "YES" && (
-          <div
-            className={`w-full ${
-              formEvent.prizeDraw === "YES" && "md:w-6/12"
-            } sm:pr-4  mb-4`}
-          >
-            <h4 className="text-center mb-2">
-              Breve descrição do <strong>Brinde</strong>
-            </h4>
-            <MDEditor
-              value={formEvent.giftDescription}
-              onChange={(text) =>
-                setFormEvent({ ...formEvent, giftDescription: text })
-              }
-              previewOptions={{
-                rehypePlugins: [[rehypeSanitize]],
-              }}
-            />
-          </div>
-        )}
-        {formEvent.prizeDraw === "YES" && (
-          <div
-            className={`w-full ${
-              formEvent.gift === "YES" && "md:w-6/12"
-            } sm:pr-4  mb-4`}
-          >
-            <h4 className="text-center mb-2">
-              Breve descrição do <strong>Sorteio Final</strong>
-            </h4>
-            <MDEditor
-              value={formEvent.prizeDrawDescription}
-              onChange={(text) =>
-                setFormEvent({ ...formEvent, prizeDrawDescription: text })
-              }
-              previewOptions={{
-                rehypePlugins: [[rehypeSanitize]],
-              }}
-            />
-          </div>
-        )}
-        <div className="w-full mb-4">
-          <h4 className="text-center mb-2">
-            {plan?.type === PLANSTYPES.SUBSCRIPTION
-              ? "Breve Descrição"
-              : "Breve descrição do Evento"}
-          </h4>
-          <MDEditor
-            value={formEvent.description}
-            onChange={(text) =>
-              setFormEvent({ ...formEvent, description: text })
-            }
-            previewOptions={{
-              rehypePlugins: [[rehypeSanitize]],
-            }}
-          />
-        </div>
-      </div>
-    );
-  };
-
   if (!plan) return <LoadingSmall />;
   return (
     <>
@@ -669,16 +322,44 @@ export default function EventForm() {
       />
       {error && <Alert type={ALERT.ERROR} text={errorMsg} />}
       <Form>
-        {renderStepFlow()}
-        {step === 1 && renderStepOne()}
-        {step === 2 && plan.type === PLANSTYPES.ADVANCED && renderStepTwo()}
-        {step === 3 && renderStepThree()}
+        <EventFormFlow
+          step={step}
+          changeStep={changeStep}
+          type={plan.type as PLANSTYPES}
+        />
+        {step === 1 && (
+          <EventsFormStepOne
+            formEvent={formEvent}
+            setFormEvent={setFormEvent}
+            type={plan.type}
+          />
+        )}
+        {step === 2 && plan.type === PLANSTYPES.ADVANCED && (
+          <EventFormStepTwo
+            formEvent={formEvent}
+            setFormEvent={setFormEvent}
+            type={plan.type}
+          />
+        )}
+        {step === 3 && (
+          <EventFormStepThree
+            formEvent={formEvent}
+            setFormEvent={setFormEvent}
+            type={plan.type}
+            fileName={fileName}
+            handleFile={handleFile}
+          />
+        )}
         <div className="w-full flex justify-center">
           <button
             type="button"
-            onClick={() =>
-              step < 3 ? changeStep(step + 1, { ...formEvent }) : handleAdd()
-            }
+            onClick={() => {
+              if (step === 3) handleAdd();
+              else {
+                if (plan.type === PLANSTYPES.ADVANCED) changeStep(step + 1);
+                else changeStep(3);
+              }
+            }}
             className={`${
               step < 3 ? "bg-secondary" : "bg-primary"
             } px-4 py-1.5 text-sm text-white font-semibold uppercase rounded shadow-md cursor-pointer hover:bg-secondary hover:shadow-md focus:bg-secondary focus:shadow-md focus:outline-none focus:ring-0 active:bg-secondary active:shadow-md transition duration-150 ease-in-out`}
