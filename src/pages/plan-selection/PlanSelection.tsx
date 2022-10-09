@@ -2,9 +2,14 @@ import { useState, useCallback, useEffect, ReactElement } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import slugify from "slugify";
 import PlansAPI from "../../api/plans";
-import { ConfirmationDialog } from "../../components";
+import { ConfirmationDialog, LoadingSmall } from "../../components";
 import { PLANSTYPES, ROUTES } from "../../interfaces/enums";
-import { useOutletContextProfileProps, PlanType, PlansModalType, PlansCardInfoType } from "../../interfaces/types";
+import {
+  useOutletContextProfileProps,
+  PlanType,
+  PlansModalType,
+  PlansCardInfoType,
+} from "../../interfaces/types";
 
 export default function PlanSelection() {
   const navigate = useNavigate();
@@ -28,10 +33,10 @@ export default function PlanSelection() {
     let res = `R$ ${price},00`;
     res +=
       type === PLANSTYPES.SUBSCRIPTION
-        ? ' Mensal'
+        ? " Mensal"
         : type === PLANSTYPES.BASIC
-          ? ' Por Evento'
-          : '* Por Evento';
+        ? " Por Evento"
+        : "* Por Evento";
     return res;
   };
 
@@ -39,18 +44,15 @@ export default function PlanSelection() {
     return (
       <>
         <h1 className="text-lg font-bold mb-4">{p.name}</h1>
-        {p.detail &&
-          p.detail.map((d) => (
-            <p key={d} className="border-b mb-2 pb-2">
-              {d}
-            </p>
-          ))}
+        {p.detail && p.detail.map((d) => (
+          <p key={d} className="border-b mb-2 pb-2">{d}</p>
+        ))}
         <h2 className="font-bold mt-4">
           {renderPlanPrice(p.price || 0, p.type)}
         </h2>
       </>
     );
-  }
+  };
 
   function choosePlan(name: string): void {
     if (name) navigate(`${ROUTES.NEW}/${slugify(name, { lower: true })}`);
@@ -65,17 +67,13 @@ export default function PlanSelection() {
     if (type === PLANSTYPES.BASIC) {
       return {
         color: "bg-emerald-500",
-        icon: (
-          <i className="bx bx-mail-send text-6xl mb-4 hover:text-emerald-500" />
-        ),
+        icon: <i className="bx bx-mail-send text-6xl mb-4 hover:text-emerald-500" />,
       };
     }
     if (type === PLANSTYPES.ADVANCED) {
       return {
         color: "bg-orange-500",
-        icon: (
-          <i className="bx bxs-message-detail text-6xl mb-4 hover:text-orange-500" />
-        ),
+        icon: <i className="bx bxs-message-detail text-6xl mb-4 hover:text-orange-500" />,
       };
     }
     return {
@@ -85,7 +83,7 @@ export default function PlanSelection() {
   };
 
   const renderPlanCard = (type: PLANSTYPES): ReactElement => {
-    const cardPlan = plans?.find(p => p.type === type) as PlanType;
+    const cardPlan = plans?.find((p) => p.type === type) as PlanType;
     const cardInfo = plansCardInfo(cardPlan.type);
     return (
       <div className="relative shadow-md text-center bg-white">
@@ -109,13 +107,15 @@ export default function PlanSelection() {
   };
 
   return (
-    <div className="grid sm:grid-cols-3 gap-4">
-      {plans && (
-        <>
+    <>
+      {plans ? (
+        <div className="grid sm:grid-cols-3 gap-4">
           {renderPlanCard(PLANSTYPES.BASIC)}
           {renderPlanCard(PLANSTYPES.ADVANCED)}
           {renderPlanCard(PLANSTYPES.SUBSCRIPTION)}
-        </>
+        </div>
+      ) : (
+        <LoadingSmall />
       )}
       {planModal && planModal.plan && (
         <ConfirmationDialog
@@ -123,13 +123,13 @@ export default function PlanSelection() {
           setOpen={setOpen}
           handleConfirm={() => choosePlan(planModal?.plan?.name)}
           icon={planModal?.info?.icon}
-          cancelText='Fechar'
-          confirmText='Selecionar'
+          cancelText="Fechar"
+          confirmText="Selecionar"
           confirmColor={planModal?.info?.color || ""}
         >
           {renderInfoModal(planModal.plan)}
         </ConfirmationDialog>
       )}
-    </div>
+    </>
   );
 }
