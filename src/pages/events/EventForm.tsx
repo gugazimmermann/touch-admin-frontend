@@ -28,6 +28,7 @@ import {
   Uploading,
   Title,
   Alert,
+  LoadingSmall,
 } from "../../components";
 import {
   EventType,
@@ -135,7 +136,7 @@ export default function EventForm() {
     setEventLogo(file);
     setErrorMsg("");
     setError(false);
-  }
+  };
 
   const handleDatesChange = (value: any) => {
     const dates = value.toString().split(",");
@@ -160,7 +161,7 @@ export default function EventForm() {
       setError(true);
       return null;
     }
-    if (!f.dates.length) {
+    if (plan?.type !== PLANSTYPES.SUBSCRIPTION && !f.dates.length) {
       setErrorMsg("Datas do Evento é obrigatório!");
       setError(true);
       return null;
@@ -206,7 +207,7 @@ export default function EventForm() {
     let mapURL = f.map || "";
     let logoURL = f.logo || "";
     const mapFile = await createMap({
-      type: plan?.type === 'ADVANCED' ? PLANSTYPES.ADVANCED : PLANSTYPES.BASIC,
+      type: plan?.type === "ADVANCED" ? PLANSTYPES.ADVANCED : PLANSTYPES.BASIC,
       id: f.eventID as string,
       name: f.name,
       street: f.street,
@@ -221,7 +222,7 @@ export default function EventForm() {
       file: mapFile,
       setProgress,
     });
-    mapURL = `/public/map/${ mapFile.name }?${Date.now()}`;
+    mapURL = `/public/map/${mapFile.name}?${Date.now()}`;
     if (eventLogo) {
       await sendPublicFile({
         type: FILETYPES.LOGO,
@@ -230,12 +231,13 @@ export default function EventForm() {
         setProgress,
       });
       logoURL = eventLogo
-        ? `/public/logo/${(f.eventID as string)}.${eventLogo.name.split(".").pop()}?${Date.now()}`
+        ? `/public/logo/${f.eventID as string}.${eventLogo.name
+            .split(".")
+            .pop()}?${Date.now()}`
         : "";
     }
     await EventsAPI.logoAndMapPatch(f.eventID as string, logoURL, mapURL);
-  }
-
+  };
 
   const handleAdd = async () => {
     setErrorMsg("");
@@ -248,10 +250,12 @@ export default function EventForm() {
       ...formEvent,
       profileID: state.profile.profileID,
       zipCode: formEvent.zipCode ? formEvent.zipCode.replace(/[^\d]/g, "") : "",
-      website: formEvent.website ? normalizeWebsite(formEvent.website || "") : "",
+      website: formEvent.website
+        ? normalizeWebsite(formEvent.website || "")
+        : "",
       dates: fomartedDates,
-      gift: formEvent.gift === 'YES' ? 1 : 0,
-      prizeDraw: formEvent.prizeDraw === 'YES' ? 1 : 0,
+      gift: formEvent.gift === "YES" ? 1 : 0,
+      prizeDraw: formEvent.prizeDraw === "YES" ? 1 : 0,
       referral: formEvent.referral,
     });
     await handleLogoAndMap(event);
@@ -275,24 +279,28 @@ export default function EventForm() {
   const handlePlanType = useCallback((type: PLANSTYPES) => {
     setFormEvent({
       ...formEvent,
-      method: type === PLANSTYPES.BASIC ? "EMAIL" : "",
-      gift: type === PLANSTYPES.BASIC ? "NO" : "",
-      prizeDraw: type === PLANSTYPES.BASIC ? "NO" : "",
+      method: type !== PLANSTYPES.ADVANCED ? "EMAIL" : "",
+      gift: type !== PLANSTYPES.ADVANCED ? "NO" : "",
+      prizeDraw: type !== PLANSTYPES.ADVANCED ? "NO" : "",
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const getPlans = useCallback(async () => {
+    setLoading(true);
     const plans = await PlansAPI.get();
     const selectedPlan = plans.find(
       (p) => slugify(p.name, { lower: true }) === params.name
     );
-    if (!selectedPlan) navigate(ROUTES.NEW);
-    else {
+    if (!selectedPlan) {
+      setLoading(false);
+      navigate(ROUTES.NEW);
+    } else {
       setPlan(selectedPlan);
       handlePlanType(selectedPlan.type);
+      setLoading(false);
     }
-  }, [handlePlanType, navigate, params.name]);
+  }, [handlePlanType, navigate, params.name, setLoading]);
 
   useEffect(() => {
     getPlans();
@@ -309,20 +317,25 @@ export default function EventForm() {
           }`}
         >
           <button type="button" onClick={() => changeStep(1, { ...formEvent })}>
-            1 - Dados Gerais
+            Dados Gerais
           </button>
         </li>
-        <li
-          className={`border-b-2 px-4 ${
-            step === 2
-              ? "border-primary font-bold"
-              : "border-slate-300 text-slate-400"
-          }`}
-        >
-          <button type="button" onClick={() => changeStep(2, { ...formEvent })}>
-            2 - Configurações
-          </button>
-        </li>
+        {plan?.type === PLANSTYPES.ADVANCED && (
+          <li
+            className={`border-b-2 px-4 ${
+              step === 2
+                ? "border-primary font-bold"
+                : "border-slate-300 text-slate-400"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => changeStep(2, { ...formEvent })}
+            >
+              Configurações
+            </button>
+          </li>
+        )}
         <li
           className={`border-b-2 px-4 ${
             step === 3
@@ -331,7 +344,7 @@ export default function EventForm() {
           }`}
         >
           <button type="button" onClick={() => changeStep(3, { ...formEvent })}>
-            3 - Detalhes
+            Detalhes
           </button>
         </li>
       </ul>
@@ -452,34 +465,36 @@ export default function EventForm() {
             }
           />
         </div>
-        <div className="w-full md:w-8/12 mb-4">
-          <DatePicker
-            onChange={handleDatesChange}
-            value={formEvent.dates}
-            format="DD/MM/YYYY"
-            multiple
-            weekDays={["D", "S", "T", "Q", "Q", "S", "S"]}
-            months={[
-              "Janeiro",
-              "Fevereiro",
-              "Março",
-              "Abril",
-              "Maio",
-              "Junho",
-              "Julho",
-              "Agosto",
-              "Setembro",
-              "Outubro",
-              "Novembro",
-              "Dezembro",
-            ]}
-            minDate={new Date()}
-            style={{
-              height: "40px",
-            }}
-            placeholder="Datas do Evento *"
-          />
-        </div>
+        {plan?.type !== PLANSTYPES.SUBSCRIPTION && (
+          <div className="w-full md:w-8/12 mb-4">
+            <DatePicker
+              onChange={handleDatesChange}
+              value={formEvent.dates}
+              format="DD/MM/YYYY"
+              multiple
+              weekDays={["D", "S", "T", "Q", "Q", "S", "S"]}
+              months={[
+                "Janeiro",
+                "Fevereiro",
+                "Março",
+                "Abril",
+                "Maio",
+                "Junho",
+                "Julho",
+                "Agosto",
+                "Setembro",
+                "Outubro",
+                "Novembro",
+                "Dezembro",
+              ]}
+              minDate={new Date()}
+              style={{
+                height: "40px",
+              }}
+              placeholder="Datas do Evento *"
+            />
+          </div>
+        )}
       </div>
     );
   };
@@ -493,13 +508,13 @@ export default function EventForm() {
             handler={(e) =>
               setFormEvent({ ...formEvent, method: e.target.value })
             }
-            disabled={plan?.type.toLocaleLowerCase() === "basic"}
+            disabled={plan?.type !== PLANSTYPES.ADVANCED}
             placeholder="Método"
           >
             <>
               <option value="">Método *</option>
-              <option value="SMS">Metódo: SMS *</option>
-              <option value="EMAIL">Metódo: EMAIL</option>
+              <option value="SMS">SMS</option>
+              <option value="EMAIL">EMAIL</option>
             </>
           </Select>
           <small>{formEvent.method === "SMS" && "* R$ 0,16 por SMS"}</small>
@@ -510,13 +525,13 @@ export default function EventForm() {
             handler={(e) =>
               setFormEvent({ ...formEvent, gift: e.target.value })
             }
-            disabled={plan?.type.toLocaleLowerCase() === "basic"}
+            disabled={plan?.type !== PLANSTYPES.ADVANCED}
             placeholder="Brinde?*"
           >
             <>
               <option value="">Brinde *</option>
-              <option value="YES">Brinde: Sim</option>
-              <option value="NO">Brinde: Não</option>
+              <option value="Sim">Sim</option>
+              <option value="Não">Não</option>
             </>
           </Select>
         </div>
@@ -526,13 +541,13 @@ export default function EventForm() {
             handler={(e) =>
               setFormEvent({ ...formEvent, prizeDraw: e.target.value })
             }
-            disabled={plan?.type.toLocaleLowerCase() === "basic"}
+            disabled={plan?.type !== PLANSTYPES.ADVANCED}
             placeholder="Sorteio Final?*"
           >
             <>
               <option value="">Sorteio Final? *</option>
-              <option value="YES">Sorteio Final: Sim</option>
-              <option value="NO">Sorteio Final: Não</option>
+              <option value="Sim">Sim</option>
+              <option value="Não">Não</option>
             </>
           </Select>
         </div>
@@ -557,7 +572,27 @@ export default function EventForm() {
   const renderStepThree = () => {
     return (
       <div className="flex flex-wrap w-full">
-        <div className="w-full mb-4">
+        {plan?.type !== PLANSTYPES.ADVANCED && (
+          <div className="w-full md:w-6/12 sm:pr-4 mb-4">
+            <Input
+              value={formEvent.referralCode || ""}
+              handler={(e) =>
+                setFormEvent({ ...formEvent, referralCode: e.target.value })
+              }
+              type="text"
+              placeholder="Código de Referência"
+            />
+            <small>
+              {formEvent.referral &&
+                `Referência: ${formEvent.referral?.company} / ${formEvent.referral?.contact}`}
+            </small>
+          </div>
+        )}
+        <div
+          className={`w-full ${
+            plan?.type !== PLANSTYPES.ADVANCED && "md:w-6/12"
+          }  mb-4`}
+        >
           <InputFile fileName={fileName} handler={(e) => handleFile(e)} />
         </div>
         {formEvent.gift === "YES" && (
@@ -602,7 +637,9 @@ export default function EventForm() {
         )}
         <div className="w-full mb-4">
           <h4 className="text-center mb-2">
-            Breve descrição do <strong>Evento</strong>
+            {plan?.type === PLANSTYPES.SUBSCRIPTION
+              ? "Breve Descrição"
+              : "Breve descrição do Evento"}
           </h4>
           <MDEditor
             value={formEvent.description}
@@ -618,11 +655,16 @@ export default function EventForm() {
     );
   };
 
+  if (!plan) return <LoadingSmall />;
   return (
     <>
       {!!progress && <Uploading progress={progress} />}
       <Title
-        text={`Novo Evento - ${plan?.name}`}
+        text={
+          plan.type === PLANSTYPES.SUBSCRIPTION
+            ? "Nova Assinatura"
+            : `Novo Evento - ${plan?.name}`
+        }
         back={ROUTES.NEW}
         className="font-bold text-center"
       />
@@ -630,7 +672,7 @@ export default function EventForm() {
       <Form>
         {renderStepFlow()}
         {step === 1 && renderStepOne()}
-        {step === 2 && renderStepTwo()}
+        {step === 2 && plan.type === PLANSTYPES.ADVANCED && renderStepTwo()}
         {step === 3 && renderStepThree()}
         <div className="w-full flex justify-center">
           <button
