@@ -8,6 +8,7 @@ export { default as Input } from "./Input";
 export { default as InputFile } from "./InputFile";
 export { default as Link } from "./Link";
 export { default as Loading } from "./Loading";
+export { default as LoadingSmall } from "./LoadingSmall";
 export { default as Nav } from "./Nav";
 export { default as NavAlert } from "./NavAlert";
 export { default as NavInfo } from "./NavInfo";
