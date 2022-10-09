@@ -17,7 +17,7 @@ const Alerts = lazy(() => import("./pages/alerts/Alerts"));
 const Profile = lazy(() => import("./pages/profile/Profile"));
 const ProfileCognito = lazy(() => import("./pages/profile/ProfileCognito"));
 const PlanSelection = lazy(() => import("./pages/plan-selection/PlanSelection"));
-const New = lazy(() => import("./pages/plan-selection/New"));
+const EventForm = lazy(() => import("./pages/events/EventForm"));
 
 function App() {
   return (
@@ -36,7 +36,7 @@ function App() {
           <Route path={ROUTES.PROFILE} element={<Profile />} />
           <Route path={ROUTES.PROFILE_ADVANCED} element={<ProfileCognito />} />
           <Route path={ROUTES.NEW} element={<PlanSelection />} />
-          <Route path={`${ROUTES.NEW}/:name`} element={<New />} />
+          <Route path={`${ROUTES.NEW}/:name`} element={<EventForm />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
