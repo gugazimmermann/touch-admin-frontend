@@ -243,19 +243,18 @@ export default function EventForm() {
     setErrorMsg("");
     setError(false);
     setLoading(true);
-    const fomartedDates = formEvent.dates.map((d: string) =>
-      DateTime.fromFormat(d, "dd/MM/yyyy").toFormat("yyyy-MM-dd")
-    );
+    const fomartedDates = formEvent.dates.map((d: string) => DateTime.fromFormat(d, "dd/MM/yyyy").toFormat("yyyy-MM-dd"));
     const event = await EventsAPI.post({
       ...formEvent,
       profileID: state.profile.profileID,
+      planType: plan?.type,
+      plan: plan,
+      profileIDPlanType: `${state.profile.profileID}#${plan?.type}`,
       zipCode: formEvent.zipCode ? formEvent.zipCode.replace(/[^\d]/g, "") : "",
-      website: formEvent.website
-        ? normalizeWebsite(formEvent.website || "")
-        : "",
+      website: formEvent.website ? normalizeWebsite(formEvent.website || "") : "",
       dates: fomartedDates,
-      gift: formEvent.gift === "YES" ? 1 : 0,
-      prizeDraw: formEvent.prizeDraw === "YES" ? 1 : 0,
+      gift: formEvent.gift === "Não" ? 0 : 1,
+      prizeDraw: formEvent.prizeDraw === "Não" ? 0 : 1,
       referral: formEvent.referral,
     });
     await handleLogoAndMap(event);
@@ -280,8 +279,8 @@ export default function EventForm() {
     setFormEvent({
       ...formEvent,
       method: type !== PLANSTYPES.ADVANCED ? "EMAIL" : "",
-      gift: type !== PLANSTYPES.ADVANCED ? "NO" : "",
-      prizeDraw: type !== PLANSTYPES.ADVANCED ? "NO" : "",
+      gift: type !== PLANSTYPES.ADVANCED ? "Não" : "",
+      prizeDraw: type !== PLANSTYPES.ADVANCED ? "Não" : "",
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

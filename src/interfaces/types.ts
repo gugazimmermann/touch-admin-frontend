@@ -127,6 +127,9 @@ export interface ReferralType extends IDBDates, IAddress, IContacts {
 export interface EventType extends IDBDates, IAddress, IContacts {
   eventID?: UUID;
   profileID?: UUID;
+  planType?: PLANSTYPES,
+  plan?: PlanType,
+  profileIDPlanType?: string;
   name: string;
   dates: string[];
   referralCode?: string;
