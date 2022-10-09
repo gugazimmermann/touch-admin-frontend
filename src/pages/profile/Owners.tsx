@@ -1,16 +1,34 @@
-import { ReactElement, ReactNode, useContext, useEffect, useState } from "react";
-import { Input, Button, Title, ConfirmationDialog, Table, Form, Alert } from "../../components";
+import {
+  ReactElement,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import {
+  Input,
+  Button,
+  Title,
+  ConfirmationDialog,
+  Table,
+  Form,
+  Alert,
+  LoadingSmall,
+} from "../../components";
 import { validateEmail, normalizePhone } from "../../helpers";
 import { ALERT } from "../../interfaces/enums";
-import { OwnersType, useOutletContextProfileProps } from "../../interfaces/types";
-import ProfileAPI from '../../api/profile';
+import {
+  OwnersType,
+  useOutletContextProfileProps,
+} from "../../interfaces/types";
+import ProfileAPI from "../../api/profile";
 import { useOutletContext } from "react-router-dom";
 import { AppContext } from "../../context";
 
 const initial = {
   name: "",
   phone: "",
-  email: ""
+  email: "",
 };
 
 export default function Owners(): ReactElement {
@@ -26,20 +44,20 @@ export default function Owners(): ReactElement {
 
   useEffect(() => {
     if (!update && selected) setSelected(initial);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [update]);
 
   function validadeForm(f: OwnersType) {
     if (!f.name || !f.phone || !f.email) {
-      setErrorMsg('Preencha os campos obrigatórios!');
+      setErrorMsg("Preencha os campos obrigatórios!");
       return false;
     }
     if (f.phone.length < 14) {
-      setErrorMsg('Telefone Inválido!');
+      setErrorMsg("Telefone Inválido!");
       return false;
     }
     if (!validateEmail(f.email)) {
-      setErrorMsg('Email é Obrigatório!');
+      setErrorMsg("Email é Obrigatório!");
       return false;
     }
     return true;
@@ -56,7 +74,7 @@ export default function Owners(): ReactElement {
     }
     if (!u) formOwner.phone = formOwner.phone ? `+55${(formOwner.phone || "").replace(/[^\d]/g, "")}` : "";
     if (u) selected.phone = selected.phone ? `+55${(selected.phone || "").replace(/[^\d]/g, "")}` : "";
-    await ProfileAPI.ownerPatch(!u ? formOwner : selected)
+    await ProfileAPI.ownerPatch(!u ? formOwner : selected);
     loadClient();
     setUpdate(false);
     setFormOwner(initial);
@@ -66,15 +84,15 @@ export default function Owners(): ReactElement {
 
   async function handleDelete(): Promise<void> {
     setLoading(true);
-    await ProfileAPI.ownerPatch({ ownerID: selected.ownerID, email: selected.email })
+    await ProfileAPI.ownerPatch({ ownerID: selected.ownerID, email: selected.email });
     loadClient();
     setConfirmDelete(false);
     setLoading(false);
   }
 
   useEffect(() => {
-    setOwnersList(state.profile.owners || [])
-  }, [state.profile.owners]);
+    setOwnersList(state.profile.owners || []);
+  }, [setLoading, state.profile.owners]);
 
   function renderForm() {
     return (
@@ -123,7 +141,7 @@ export default function Owners(): ReactElement {
         </div>
         <div className="w-full flex justify-center">
           <Button
-            text={`${!update ? 'Adicionar' : 'Atualizar'} Responsável`}
+            text={`${!update ? "Adicionar" : "Atualizar"} Responsável`}
             handler={() => {
               if (!update) handleSubmit();
               else handleSubmit(true);
@@ -174,10 +192,10 @@ export default function Owners(): ReactElement {
             setUpdate(!update);
           }}
         >
-          {!update ? (
-            <i className="bx bx-message-square-edit text-xl text-primary" />
-          ) : (
+          {(update && o.ownerID === selected.ownerID) ? (
             <i className="bx bx-message-square-minus text-xl text-warning" />
+          ) : (
+            <i className="bx bx-message-square-edit text-xl text-primary" />
           )}
         </td>
         <td
@@ -210,17 +228,15 @@ export default function Owners(): ReactElement {
   return (
     <>
       <Title
-        text={`${ !update  ? 'Adicionar' : 'Atualizar' } Responsável`}
-        className={
-          update
-            ? "text-warning font-bold text-center"
-            : "font-bold text-center"
-        }
+        text={`${!update ? "Adicionar" : "Atualizar"} Responsável`}
+        className={ update ? "text-warning font-bold text-center" : "font-bold text-center" }
       />
       {error && <Alert type={ALERT.ERROR} text={errorMsg} />}
       {renderForm()}
-      {ownersList && ownersList.length > 0 && (
+      {ownersList && ownersList.length > 0 ? (
         <Table header={header()} body={body()} />
+      ) : (
+        <LoadingSmall />
       )}
       {renderDeleteDialog()}
     </>

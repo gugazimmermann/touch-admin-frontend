@@ -1,4 +1,4 @@
-import { useContext, useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import ProfileAPI from "../../api/profile";
 import { sendPublicFile } from "../../api/storage";
@@ -12,7 +12,6 @@ import {
   InputFile,
   Form,
 } from "../../components";
-import { AppContext } from "../../context";
 import {
   createMap,
   getAddressFromCEP,
@@ -59,7 +58,6 @@ const initial = {
 export default function Profile() {
   const navigate = useNavigate();
   const { loadClient, setLoading } = useOutletContext<useOutletContextProfileProps>();
-  const { state } = useContext(AppContext);
   const [error, setError] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [profile, setProfile] = useState<ProfileType>();
@@ -149,9 +147,7 @@ export default function Profile() {
       (f.documenttype === DOCS.CPF && f.document.length < 14) ||
       (f.documenttype === DOCS.CNPJ && f.document.length < 18)
     ) {
-      setErrorMsg(
-        f.documenttype === DOCS.CPF ? "CPF inválido!" : "CNPJ inválido"
-      );
+      setErrorMsg(f.documenttype === DOCS.CPF ? "CPF inválido!" : "CNPJ inválido");
       return false;
     }
     return true;
@@ -176,9 +172,7 @@ export default function Profile() {
       file: mapFile,
       setProgress,
     });
-    mapURL = `/public/map/${
-      mapFile.name
-    }?${Date.now()}`;
+    mapURL = `/public/map/${mapFile.name}?${Date.now()}`;
     if (logoFile) {
       await sendPublicFile({
         type: FILETYPES.LOGO,
@@ -186,45 +180,13 @@ export default function Profile() {
         file: logoFile,
         setProgress,
       });
-      logoURL = logoFile
-        ? `/public/logo/${p.profileID}.${logoFile.name
-            .split(".")
-            .pop()}?${Date.now()}`
-        : "";
+      logoURL = logoFile ? `/public/logo/${p.profileID}.${logoFile.name.split(".").pop()}?${Date.now()}`: "";
     }
     await ProfileAPI.logoAndMapPatch(logoURL, mapURL);
   }
 
-  const handleSubmit = async (): Promise<boolean> => {
-    setErrorMsg("");
-    setError(false);
-    setLoading(true);
-    if (!validadeForm({ ...form })) {
-      setError(true);
-      setLoading(false);
-      return false;
-    }
-    if (form) {
-      form.phone = form.phone
-        ? `+55${(form.phone || "").replace(/[^\d]/g, "")}`
-        : "";
-      form.document = form.document ? form.document.replace(/[^\d]/g, "") : "";
-      form.website = form.website ? normalizeWebsite(form.website || "") : "";
-      form.zipCode = form.zipCode ? form.zipCode.replace(/[^\d]/g, "") : "";
-      const updatedProfile = await ProfileAPI.update(form);
-      updateForm(updatedProfile);
-      await handleLogoAndMap(form);
-      loadClient(true);
-      setLoading(false);
-      navigate(ROUTES.HOME);
-      return true;
-    }
-    return false;
-  }
-
   const updateForm = (p: ProfileType) => {
-    setProfile(p);
-    setForm({
+    const normalizeForm = {
       profileID: p.profileID,
       name: p.name || "",
       phone: normalizePhone(p.phone, true),
@@ -241,21 +203,46 @@ export default function Profile() {
       complement: p.complement || "",
       map: p.map || "",
       logo: p.logo || "",
-    });
+    }
+    setProfile(normalizeForm);
+    setForm(normalizeForm);
   };
 
-  const getClient = useCallback(async (): Promise<void> => {
+  const handleSubmit = async (): Promise<boolean> => {
+    setErrorMsg("");
+    setError(false);
     setLoading(true);
-    if (state.profile?.profileID) {
-      const p = await ProfileAPI.get();
-      if (p.profileID) updateForm(p);
+    if (!validadeForm({ ...form })) {
+      setError(true);
+      setLoading(false);
+      return false;
     }
+    form.phone = form.phone ? `+55${(form.phone || "").replace(/[^\d]/g, "")}` : "";
+    form.document = form.document ? form.document.replace(/[^\d]/g, "") : "";
+    form.website = form.website ? normalizeWebsite(form.website || "") : "";
+    form.zipCode = form.zipCode ? form.zipCode.replace(/[^\d]/g, "") : "";
+    const updatedProfile = await ProfileAPI.update(form);
+    updateForm(updatedProfile);
+    await handleLogoAndMap(form);
+    loadClient(true);
     setLoading(false);
-  }, [setLoading, state.profile?.profileID]);
+    navigate(ROUTES.HOME);
+    return true;
+  }
 
   useEffect(() => {
+    if (form.email) setLoading(false)
+  }, [form.email, setLoading])
+
+  const getClient = useCallback(async (): Promise<void> => {
+    const p = await ProfileAPI.get();
+    updateForm(p);
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
     getClient();
-  }, [getClient]);
+  }, [getClient, setLoading]);
 
   return (
     <>

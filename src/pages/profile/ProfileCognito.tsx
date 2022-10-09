@@ -68,15 +68,12 @@ export default function Profile() {
     setLoading(false);
   };
 
-  const disabledEmail = () =>
-    !email || email === state.profile?.email || !validateEmail(email);
+  const disabledEmail = () => !email || email === state.profile?.email || !validateEmail(email);
 
   const disabledCode = () => !code || code.length > 6;
 
-  const disabledPassword = () =>
-    !currentPassword ||
-    newPassword !== repeatPassword ||
-    newPassword.length < 8;
+  const disabledPassword = () => !currentPassword || newPassword !== repeatPassword || newPassword.length < 8;
+
   const renderEmail = () => (
     <>
       <Input
@@ -97,7 +94,7 @@ export default function Profile() {
     <>
       <Title
         text="Por favor, verifique seu Email e envie o código."
-        className="text-amber-500 text-sm"
+        className="text-warning text-sm"
       />
       <Input
         type="text"
