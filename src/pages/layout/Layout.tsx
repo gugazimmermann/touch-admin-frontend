@@ -19,8 +19,9 @@ export default function Layout() {
   const handleSignOut = useCallback(async () => {
     await Auth.SignOut();
     cookies.remove(COOKIES.NAME);
+    dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: {} as ProfileType });
     navigate(ROUTES.SIGNIN);
-  }, [navigate]);
+  }, [dispatch, navigate]);
 
   const profileAlert = useCallback(
     (profile: ProfileType) => {
@@ -66,10 +67,10 @@ export default function Layout() {
   }, [loadClient]);
 
   return (
-    <main className="layout flex flex-col h-screen justify-between container mx-auto max-w-5xl">
+    <main className="layout flex flex-col bg-slate-100 h-screen justify-between container mx-auto max-w-5xl">
       {loading && <Loading />}
       <Nav handleSignOut={handleSignOut} />
-      <div className="layout mb-auto h-full p-4 bg-slate-100">
+      <div className="layout mb-auto h-min p-4 pb-8 bg-slate-100">
         <Outlet context={{ loadClient, setLoading }} />
       </div>
     </main>
