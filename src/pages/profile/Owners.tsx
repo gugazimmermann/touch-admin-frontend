@@ -233,11 +233,8 @@ export default function Owners(): ReactElement {
       />
       {error && <Alert type={ALERT.ERROR} text={errorMsg} />}
       {renderForm()}
-      {ownersList && ownersList.length > 0 ? (
-        <Table header={header()} body={body()} />
-      ) : (
-        <LoadingSmall />
-      )}
+      {!ownersList && <LoadingSmall />}
+      {ownersList && ownersList.length > 0 && <Table header={header()} body={body()} />}
       {renderDeleteDialog()}
     </>
   );
