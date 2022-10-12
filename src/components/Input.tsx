@@ -2,7 +2,7 @@ import { useState, ReactElement } from 'react';
 
 type InputProps = {
   type: "password" | "email" | "text";
-  placeholder: string;
+  placeholder?: string;
   value: string | number;
   handler?: (e: { target: HTMLInputElement }) => void;
   disabled?: boolean;
