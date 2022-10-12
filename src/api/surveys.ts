@@ -6,12 +6,12 @@ import AxiosInstance from "./index";
 const cookies = new Cookies();
 const getCookie = COOKIES.Decode(cookies.get(COOKIES.NAME));
 
-export const getByEnvetID = async (eventID: UUID): Promise<SurveyType> => {
+export const getByEnvetID = async (eventID: UUID): Promise<SurveyType[]> => {
   const { data } = await AxiosInstance.get(`/surveys/byEventID/${eventID}`);
   return data.data;
 };
 
-export const getByProfileID = async (): Promise<SurveyType> => {
+export const getByProfileID = async (): Promise<SurveyType[]> => {
   const { data } = await AxiosInstance.get(`/surveys/byProfileID/${getCookie.sub}`);
   return data.data;
 };

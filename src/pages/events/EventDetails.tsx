@@ -5,10 +5,11 @@ import QRCode from "qrcode";
 import { CSVLink } from 'react-csv';
 import { DateTime } from "luxon";
 import { Alert } from "../../components";
-import { ALERT, ROUTES } from "../../interfaces/enums";
-import { EventType, UUID } from "../../interfaces/types";
+import { ALERT, LANGUAGESLABELS, ROUTES } from "../../interfaces/enums";
+import { EventType, UUID, SurveyType } from '../../interfaces/types';
 import EventsAPI from "../../api/events";
 import { normalizeCEP } from "../../helpers";
+import SurveysAPI from "../../api/surveys";
 
 const LOGO_MAPS_BUCKET = process.env.REACT_APP_LOGO_MAPS_BUCKET || "";
 const EVENTS_URL = process.env.REACT_APP_EVENTS_URL || "";
@@ -21,6 +22,7 @@ export default function EventDetail() {
   const [loading, setLoading] = useState(false);
   const [over, setOver] = useState<boolean>(false);
   const [event, setEvent] = useState<EventType>();
+  const [surveys, setSurveys] = useState<SurveyType[]>([]);
   const [qr, setQr] = useState("");
   const [headers, setHeaders] = useState();
 	const [data, setData] = useState();
@@ -57,6 +59,8 @@ export default function EventDetail() {
         dates.sort();
         const seeOver = dates[0] <= DateTime.now();
         if (seeOver) setOver(true);
+        const surveys = await SurveysAPI.getByEnvetID(data?.eventID as string);
+        setSurveys(surveys);
         generateQRCode(eventID);
         setEvent(data);
         setLoading(false);
@@ -79,12 +83,11 @@ export default function EventDetail() {
   );
 
   const renderSurveyRow = (): ReactElement => {
-    const surveyQuestions = 0;
     return (
       <div className="p-2 border-b sm:grid sm:grid-cols-12">
         <dt className="text-sm font-medium sm:col-span-2">Pesquisa:</dt>
         <dl className="text-sm sm:mt-0 sm:col-span-4 font-bold">
-          {!surveyQuestions ? "Não Cadastrada" : `${surveyQuestions} perguntas`}
+          {!surveys.length ? "Não Cadastrada" : surveys.map(s => LANGUAGESLABELS[s.language]).join(', ')}
         </dl>
         {!over && (
           <dl className="text-sm sm:mt-0 sm:col-span-6 text-right">
