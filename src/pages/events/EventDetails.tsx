@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback, ReactElement } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import slugify from "slugify";
 import QRCode from "qrcode";
+import { CSVLink } from 'react-csv';
 import { DateTime } from "luxon";
 import { Alert } from "../../components";
-import { ALERT, PLANSTYPES, ROUTES } from "../../interfaces/enums";
+import { ALERT, ROUTES } from "../../interfaces/enums";
 import { EventType, UUID } from "../../interfaces/types";
 import EventsAPI from "../../api/events";
 import { normalizeCEP } from "../../helpers";
@@ -21,6 +22,8 @@ export default function EventDetail() {
   const [over, setOver] = useState<boolean>(false);
   const [event, setEvent] = useState<EventType>();
   const [qr, setQr] = useState("");
+  const [headers, setHeaders] = useState();
+	const [data, setData] = useState();
 
   const generateQRCode = useCallback(async (eventID: UUID) => {
     try {
@@ -88,6 +91,7 @@ export default function EventDetail() {
             <button
               type="button"
               className="px-2 py-0.5 bg-orange-300 border-orange-500 text-white rounded-lg"
+              onClick={() => { navigate(`${ROUTES.SURVEYS}/${event?.eventID}`)}}
             >
               Adicionar
             </button>
@@ -96,6 +100,31 @@ export default function EventDetail() {
       </div>
     );
   }
+
+  const handleDashboard = (visitors: number, eventID: UUID): void => {
+    console.log(eventID)
+		// if (visitors) navigate(`${ROUTES.DASHBOARD}/${eventID}`, { state: { event, visitors } });
+	}
+
+  const renderDashboardCard = (visitors: number, eventID: UUID): ReactElement => {
+		return (
+			<div
+				role="presentation"
+				onClick={() => handleDashboard(visitors, eventID)}
+				className={`${visitors && 'cursor-pointer'} w-full p-1 flex flex-col justify-center items-center text-secondary`}
+			>
+				<i className="bx bxs-pie-chart-alt-2 text-9xl" />
+				<h2 className="text-lg font-bold">Relatório</h2>
+			</div>
+		);
+	}
+
+  const renderWinnerCard = (): ReactElement => (
+			<div className="bg-white shadow-md overflow-hidden rounded-lg p-1 sm:w-6/12 md:w-full flex flex-col items-center align-middle">
+				<i className="bx bxs-trophy text-primary text-5xl" />
+				<h2 className="text-lg text-primary font-bold">Ganhador(a) do Sorteio</h2>
+			</div>
+		);
 
   const renderQRCodeCard = (name: string): ReactElement => (
       <a
@@ -164,8 +193,19 @@ export default function EventDetail() {
             {renderLogoCard(event)}
             <div className="w-full md:w-3/12 flex flex-rowv md:flex-col">
               <div className="bg-white shadow-md overflow-hidden rounded-lg mb-2 sm:w-6/12 md:w-full sm:mr-4">
-                {renderQRCodeCard(event.name)}
+                {over ? renderDashboardCard(10, event.eventID as UUID) : renderQRCodeCard(event.name)}
               </div>
+              {over && data && (
+								<CSVLink
+									data={data}
+									headers={headers}
+									filename={slugify(event.name, { lower: true })}
+									className="px-2 py-1 bg-secondary text-white rounded-lg mb-2 shadow-md text-center font-bold"
+								>
+									<i className="bx bxs-download" /> Exportar Dados
+								</CSVLink>
+							)}
+							{over && renderWinnerCard()}
             </div>
           </div>
           <div className="shadow-md rounded-lg flex flex-col sm:flex-row">
