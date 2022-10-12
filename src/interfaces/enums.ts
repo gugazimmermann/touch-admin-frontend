@@ -11,6 +11,7 @@ export enum ROUTES {
   NEW = "/novo",
   EVENTS = "/eventos",
   SUBSCRIPTIONS = "/assinaturas",
+  SURVEYS = "/pesquisas",
 }
 
 export const BrazilStates = [
@@ -103,3 +104,30 @@ export enum PlansFrequency {
   SINGLE = "SINGLE",
   MONTHLY = "MONTHLY",
 }
+
+export enum SURVEYANSWER {
+  SINGLE = "SINGLE",
+  MULTIPLE = "MULTIPLE",
+  TEXT = "TEXT",
+  MULTILINE = "MULTILINE",
+}
+
+export enum LANGUAGES {
+  BR = "BR",
+  US = "US",
+  ES = "ES",
+  FR = "FR",
+  DE = "DE",
+  IT = "IT",
+}
+
+export type LanguagesObject = { [key in LANGUAGES]: string };
+
+export const LANGUAGESLABELS: LanguagesObject = {
+  BR: "Português",
+  US: "Inglês",
+  ES: "Espanhol",
+  FR: "Frances",
+  DE: "Alemão",
+  IT: "Italiano"
+};

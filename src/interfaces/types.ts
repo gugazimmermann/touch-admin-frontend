@@ -1,5 +1,5 @@
 import { ReactElement } from "react";
-import { ALERT, FILETYPES, MapTypes, PlansFrequency, PLANSTYPES } from "./enums";
+import { ALERT, FILETYPES, LANGUAGES, MapTypes, PlansFrequency, PLANSTYPES, SURVEYANSWER } from './enums';
 
 export type useOutletContextProps = {
   setAlert: (alert: AlertType) => void;
@@ -142,4 +142,26 @@ export interface EventType extends IDBDates, IAddress, IContacts {
   description?: string;
   map?: string;
   logo?: string;
+}
+
+export interface SurveyAnswerType extends IDBDates {
+  id: UUID;
+  order: number;
+  text: string;
+}
+
+export interface SurveyQuestionType extends IDBDates {
+  id: UUID;
+  order: number;
+  text: string;
+  type: SURVEYANSWER;
+  required: string;
+  answers: SurveyAnswerType[];
+}
+export interface SurveyType extends IDBDates {
+  surveyID: UUID;
+  profileID: UUID;
+  eventID: UUID;
+  language: LANGUAGES,
+  questions: SurveyQuestionType[]
 }
