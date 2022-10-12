@@ -6,9 +6,10 @@ type TitleProps = {
   className?: string;
   back?: string;
   advanced?: string;
+  help?: ReactElement;
 };
 
-const Title = ({ text, className, back, advanced }: TitleProps): ReactElement => {
+const Title = ({ text, className, back, advanced, help }: TitleProps): ReactElement => {
   return (
     <div className="flex relative">
       {back && (
@@ -26,6 +27,9 @@ const Title = ({ text, className, back, advanced }: TitleProps): ReactElement =>
           Avançado <i className="bx bxs-error-circle text-xl ml-1" />
         </Link>
       )}
+      <div className="flex absolute right-0">
+        {help}
+      </div>
     </div>
   );
 };
