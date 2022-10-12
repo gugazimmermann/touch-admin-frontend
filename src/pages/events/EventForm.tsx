@@ -27,7 +27,6 @@ import ReferralsAPI from "../../api/referral";
 import EventsAPI from "../../api/events";
 import { AppContext } from "../../context";
 import { sendPublicFile } from "../../api/storage";
-import { ReferralType } from "../../interfaces/types";
 import EventsFormStepOne from "./EventsFormStepOne";
 import EventFormStepTwo from "./EventFormStepTwo";
 import EventFormStepThree from "./EventFormStepThree";
