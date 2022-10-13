@@ -128,23 +128,23 @@ export default function EventDetail() {
     );
   };
 
+  const surveyList = () => {
+    const res = surveys.map((s) => {
+      return (
+        <Link to={`${ROUTES.SURVEYS}/edit/${s.surveyID}`} className="underline">
+          {LANGUAGESLABELS[s.language]} ({s.questions.length})
+        </Link>
+      );
+    });
+    return res;
+  };
+
   const renderSurveyRow = (): ReactElement => {
     return (
       <div className="p-2 border-b sm:grid sm:grid-cols-12">
         <dt className="text-sm font-medium sm:col-span-2">Pesquisa:</dt>
         <dl className="text-sm sm:mt-0 sm:col-span-4 font-bold">
-          {!surveys.length ? (
-            "Não Cadastrada"
-          ) : (
-            <Link to="das" className="underline">
-              {surveys
-                .map(
-                  (s) =>
-                    `${LANGUAGESLABELS[s.language]} (${s.questions.length})`
-                )
-                .join(", ")}
-            </Link>
-          )}
+          {!surveys.length ? "Não Cadastrada" : surveyList()}
         </dl>
         {!over && (
           <dl className="text-sm sm:mt-0 sm:col-span-6 text-right">

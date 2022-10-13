@@ -26,6 +26,11 @@ export const post = async (survey: SurveyType): Promise<SurveyType> => {
   return data.data;
 }
 
-const SurveysAPI = { getByEnvetID, post };
+export const translate = async (surveyID: UUID, language: string): Promise<SurveyType> => {
+  const { data } = await AxiosInstance.post("/surveys/translate", { surveyID, language });
+  return data.data;
+}
+
+const SurveysAPI = { getByEnvetID, getBySurveyID, post, translate };
 
 export default SurveysAPI;
