@@ -26,6 +26,11 @@ export const logoAndMapPatch = async (eventID: string, logo: string, map: string
   return data.data;
 }
 
-const EventsAPI = { getByEnvetID, getByProfileID, post, logoAndMapPatch };
+export const method = async (eventID: string, method: string): Promise<EventType> => {
+  const { data } = await AxiosInstance.patch(`/events/${eventID}/method`, { method });
+  return data.data;
+}
+
+const EventsAPI = { getByEnvetID, getByProfileID, post, logoAndMapPatch, method };
 
 export default EventsAPI;
