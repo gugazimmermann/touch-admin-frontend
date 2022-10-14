@@ -19,7 +19,7 @@ const ProfileCognito = lazy(() => import("./pages/profile/ProfileCognito"));
 const PlanSelection = lazy(() => import("./pages/plan-selection/PlanSelection"));
 const EventForm = lazy(() => import("./pages/events/EventForm"));
 const EventDetails = lazy(() => import("./pages/events/EventDetails"));
-const Surveys = lazy(() => import("./pages/surverys/Surveys"));
+const SurveysAdd = lazy(() => import("./pages/surverys/SurveysAdd"));
 const SurveysEdit = lazy(() => import("./pages/surverys/SurveysEdit"));
 
 function App() {
@@ -41,8 +41,9 @@ function App() {
           <Route path={ROUTES.NEW} element={<PlanSelection />} />
           <Route path={`${ROUTES.NEW}/:name`} element={<EventForm />} />
           <Route path={`${ROUTES.EVENTS}/:eventID`} element={<EventDetails />} />
-          <Route path={`${ROUTES.SURVEYS}/:eventID`} element={<Surveys />} />
-          <Route path={`${ROUTES.SURVEYS}/edit/:surveyID`} element={<SurveysEdit />} />
+          <Route path={`${ROUTES.EDIT}/:eventID`} element={<EventForm />} />
+          <Route path={`${ROUTES.SURVEYS}/adicionar/:eventID`} element={<SurveysAdd />} />
+          <Route path={`${ROUTES.SURVEYS}/edit/:surveyID/:language`} element={<SurveysEdit />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
