@@ -12,15 +12,16 @@ import {
 } from "../../components";
 import {
   ALERT,
-  LANGUAGESLABELS,
+  LANGUAGESFLAGS,
   PLANSTYPES,
   ROUTES,
 } from "../../interfaces/enums";
-import { EventType, UUID, SurveyType } from "../../interfaces/types";
+import { EventType, UUID, SurveyType, SurveyPostType, SurveySimpleType } from "../../interfaces/types";
 import EventsAPI from "../../api/events";
-import { normalizeCEP } from "../../helpers";
+import { getObjKey, normalizeCEP } from "../../helpers";
 import SurveysAPI from "../../api/surveys";
 import smsPrice from "../../helpers/smsPrice";
+import { LANGUAGES } from '../../interfaces/enums';
 
 const LOGO_MAPS_BUCKET = process.env.REACT_APP_LOGO_MAPS_BUCKET || "";
 const EVENTS_URL = process.env.REACT_APP_EVENTS_URL || "";
@@ -33,7 +34,8 @@ export default function EventDetail() {
   const [loading, setLoading] = useState(false);
   const [over, setOver] = useState<boolean>(false);
   const [event, setEvent] = useState<EventType>();
-  const [surveys, setSurveys] = useState<SurveyType[]>([]);
+  const [survey, setSurvey] = useState<SurveyPostType>();
+  const [surveys, setSurveys] = useState<SurveySimpleType[]>([]);
   const [qr, setQr] = useState("");
   const [headers, setHeaders] = useState();
   const [data, setData] = useState();
@@ -77,8 +79,9 @@ export default function EventDetail() {
         dates.sort();
         const seeOver = dates[0] <= DateTime.now();
         if (seeOver) setOver(true);
-        const surveys = await SurveysAPI.getByEnvetID(data?.eventID as string);
-        setSurveys(surveys);
+        const [surveyRes] = await SurveysAPI.getByEnvetID(data?.eventID as string);
+        setSurvey(surveyRes);
+        setSurveys(surveyRes?.surveys || []);
         generateQRCode(eventID);
         setNewMethod(data.method);
         setEvent(data);
@@ -94,10 +97,7 @@ export default function EventDetail() {
     if (params.eventID) handleGetEvent(params.eventID);
   }, [handleGetEvent, params.eventID]);
 
-  const renderDescriptionRow = (
-    text: string,
-    description: string
-  ): ReactElement => (
+  const renderDescriptionRow = (text: string, description: string): ReactElement => (
     <div className="p-2 border-b sm:grid sm:grid-cols-12">
       <dt className="text-sm font-medium sm:col-span-2 pr-2">{text}</dt>
       <dl className="text-sm sm:mt-0 sm:col-span-10 font-bold">
@@ -110,12 +110,12 @@ export default function EventDetail() {
     return (
       <div className="p-2 border-b sm:grid sm:grid-cols-12">
         <dt className="text-sm font-medium sm:col-span-2 pr-2">Método</dt>
-        <dl className="text-sm sm:mt-0 sm:col-span-4 font-bold">
+        <dl className="text-sm sm:mt-0 sm:col-span-6 font-bold">
           {event?.method === "SMS"
             ? `SMS (R$ ${sms} por envio - apox.)`
             : "Email"}
         </dl>
-        <dl className="text-sm sm:mt-0 sm:col-span-6 text-right">
+        <dl className="text-sm sm:mt-0 sm:col-span-4 text-right">
           <button
             type="button"
             className="px-2 py-0.5 bg-orange-300 border-orange-500 text-white rounded-lg"
@@ -130,9 +130,10 @@ export default function EventDetail() {
 
   const surveyList = () => {
     const res = surveys.map((s) => {
+      const l = getObjKey(LANGUAGES, s.language) || "";
       return (
-        <Link to={`${ROUTES.SURVEYS}/edit/${s.surveyID}`} className="underline">
-          {LANGUAGESLABELS[s.language]} ({s.questions.length})
+        <Link to={`${ROUTES.SURVEYS}/edit/${survey?.surveyID}/${l}`} className="underline">
+          {LANGUAGESFLAGS[l]} ({s.questions.length})
         </Link>
       );
     });
@@ -143,16 +144,16 @@ export default function EventDetail() {
     return (
       <div className="p-2 border-b sm:grid sm:grid-cols-12">
         <dt className="text-sm font-medium sm:col-span-2">Pesquisa:</dt>
-        <dl className="text-sm sm:mt-0 sm:col-span-4 font-bold">
-          {!surveys.length ? "Não Cadastrada" : surveyList()}
+        <dl className="text-sm sm:mt-0 sm:col-span-6 font-bold">
+          {(!surveys || !surveys.length) ? "Não Cadastrada" : surveyList()}
         </dl>
-        {!over && (
-          <dl className="text-sm sm:mt-0 sm:col-span-6 text-right">
+        {(!over && (!surveys || !surveys.length)) && (
+          <dl className="text-sm sm:mt-0 sm:col-span-4 text-right">
             <button
               type="button"
               className="px-2 py-0.5 bg-orange-300 border-orange-500 text-white rounded-lg"
               onClick={() => {
-                navigate(`${ROUTES.SURVEYS}/${event?.eventID}`);
+                navigate(`${ROUTES.SURVEYS}/adicionar/${event?.eventID}`);
               }}
             >
               Adicionar
@@ -243,6 +244,7 @@ export default function EventDetail() {
         {!over && (
           <button
             type="button"
+            onClick={() => navigate(`${ROUTES.EDIT}/${event.eventID}`)}
             className="px-2 py-1 w-full bg-orange-300 border-orange-500 text-white rounded-b-lg"
           >
             Editar

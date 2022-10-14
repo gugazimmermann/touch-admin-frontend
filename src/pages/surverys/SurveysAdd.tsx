@@ -13,7 +13,6 @@ import {
 import { Form } from "../../components";
 import DroppableList from "./components/DroppableList";
 import SurveysTitle from "./components/SurveysTitle";
-import SurveysLanguage from "./components/SurveysLanguage";
 import SurveysQuestionForm from "./SurveysQuestionForm";
 import SurveysAnswerForm from "./SurveysAnswerForm";
 import SurveysAPI from "../../api/surveys";
@@ -22,7 +21,7 @@ const initialSurvey: SurveyType = {
   surveyID: uuidv4(),
   profileID: "",
   eventID: "",
-  language: "" as LANGUAGES,
+  language: LANGUAGES.BR,
   questions: [],
 };
 
@@ -35,7 +34,7 @@ const initialQuestion: SurveyQuestionType = {
   answers: [],
 };
 
-export default function Surveys() {
+export default function SurveysAdd() {
   const params = useParams();
   const navigate = useNavigate();
   const { setLoading } = useOutletContext<useOutletContextProfileProps>();
@@ -51,9 +50,13 @@ export default function Surveys() {
   const handleSaveSurvey = async () => {
     setLoading(true);
     await SurveysAPI.post({
-      ...survey,
+      surveyID: survey.surveyID,
       eventID: event?.eventID as string,
       profileID: event?.profileID as string,
+      surveys: [{
+        language: survey.language,
+        questions: survey.questions
+      }]
     });
     resetSurvey();
     resetQuestion();
@@ -150,14 +153,7 @@ export default function Surveys() {
 
   return (
     <>
-      <SurveysTitle event={event} language={survey.language} />
-      <SurveysLanguage
-        survey={survey}
-        setSurvey={setSurvey}
-        resetSurvey={resetSurvey}
-        resetQuestion={resetQuestion}
-      />
-      {survey.language && (
+      <SurveysTitle event={event} />
         <Form>
           <SurveysQuestionForm question={question} setQuestion={setQuestion} />
           {(question?.type === SURVEYANSWER.SINGLE ||
@@ -171,7 +167,6 @@ export default function Surveys() {
           )}
           {renderAnswerButtons()}
         </Form>
-      )}
       {!!survey.questions.length && (
         <Form>
           <DroppableList
