@@ -1,13 +1,14 @@
 import { DateTime } from "luxon";
 import { useState, useEffect, ReactElement, useCallback } from "react";
+import { useOutletContext } from "react-router-dom";
 import EventsAPI from "../../api/events";
-import { Form, Grid, LoadingSmall, Title } from "../../components";
+import { Form, Grid, Title } from "../../components";
 import { PLANSTYPES } from "../../interfaces/enums";
-import { EventType } from "../../interfaces/types";
+import { EventType, useOutletContextProfileProps } from "../../interfaces/types";
 import DashboardCard from "./DashboardCard";
 
 export default function DashboardRow(): ReactElement {
-  const [loading, setLoading] = useState(false);
+  const { setLoading } = useOutletContext<useOutletContextProfileProps>();
   const [showContent, setShowContent] = useState<EventType[]>([]);
   const [currentEvents, setCurrentEvents] = useState<EventType[]>([]);
   const [pastEvents, setPastEvents] = useState<EventType[]>([]);
@@ -38,9 +39,7 @@ export default function DashboardRow(): ReactElement {
   const orderContent = useCallback(async () => {
     setLoading(true);
     const content = await EventsAPI.getByProfileID();
-    const events = content.filter(
-      (e) => e.planType !== PLANSTYPES.SUBSCRIPTION
-    );
+    const events = content.filter((e) => e.planType !== PLANSTYPES.SUBSCRIPTION);
     const subs = content.filter((e) => e.planType === PLANSTYPES.SUBSCRIPTION);
     setSubscriptions(subs);
     const current = events.map((e) => seeCurrentEvents(e)).filter((x) => x);
@@ -51,7 +50,7 @@ export default function DashboardRow(): ReactElement {
     setPastEvents(past as EventType[]);
     setShowContent(content);
     setLoading(false);
-  }, [seeFutureEvents, seePastEvents]);
+  }, [seeFutureEvents, seePastEvents, setLoading]);
 
   useEffect(() => {
     orderContent();
@@ -69,8 +68,6 @@ export default function DashboardRow(): ReactElement {
       </Form>
     </>
   );
-
-  if (loading) return <LoadingSmall />;
 
   return (
     <>
