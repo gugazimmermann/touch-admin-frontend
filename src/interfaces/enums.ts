@@ -1,3 +1,5 @@
+import { GenericObject } from "./types";
+
 export enum ROUTES {
   SIGNIN = "/",
   FORGOTPASSWORD = "/recuperar-senha",
@@ -9,6 +11,7 @@ export enum ROUTES {
   PROFILE_ADVANCED = "/perfil/avancado",
   ALERTS = "/alertas",
   NEW = "/novo",
+  EDIT = "/editar",
   EVENTS = "/eventos",
   SUBSCRIPTIONS = "/assinaturas",
   SURVEYS = "/pesquisas",
@@ -112,22 +115,27 @@ export enum SURVEYANSWER {
   MULTILINE = "MULTILINE",
 }
 
-export enum LANGUAGES {
-  BR = "BR",
-  US = "US",
-  ES = "ES",
-  FR = "FR",
-  DE = "DE",
-  IT = "IT",
+export const LANGUAGES: GenericObject = {
+  BR: "pt",
+  US: "en",
+  ES: "es",
+  FR: "fr",
+  DE: "de",
+  IT: "it",
+  CN: "zh",
+  JP: "ja",
+  KR: "ko",
+  RU: "ru",
 }
-
-export type LanguagesObject = { [key in LANGUAGES]: string };
-
-export const LANGUAGESLABELS: LanguagesObject = {
+export const LANGUAGESFLAGS: GenericObject = {
   BR: "Português",
   US: "Inglês",
   ES: "Espanhol",
   FR: "Frances",
   DE: "Alemão",
-  IT: "Italiano"
+  IT: "Italiano",
+  CN: "Chinês",
+  JP: "Japonês",
+  KR: "Coreano",
+  RU: "Russo",
 };

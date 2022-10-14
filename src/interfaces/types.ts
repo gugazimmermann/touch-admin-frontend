@@ -162,6 +162,18 @@ export interface SurveyType extends IDBDates {
   surveyID: UUID;
   profileID: UUID;
   eventID: UUID;
-  language: LANGUAGES,
+  language: string,
   questions: SurveyQuestionType[]
+}
+
+export type SurveySimpleType = {
+  language: string,
+  questions: SurveyQuestionType[]
+}
+
+export type SurveyPostType = {
+  surveyID: UUID;
+  profileID: UUID;
+  eventID: UUID;
+  surveys: SurveySimpleType[]
 }
