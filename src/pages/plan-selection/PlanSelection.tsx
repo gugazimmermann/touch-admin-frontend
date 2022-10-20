@@ -1,11 +1,10 @@
 import { useState, useCallback, useEffect, ReactElement } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import slugify from "slugify";
 import PlansAPI from "../../api/plans";
-import { ConfirmationDialog, LoadingSmall } from "../../components";
+import { ConfirmationDialog, Loading, LoadingSmall } from "../../components";
 import { PLANSTYPES, ROUTES } from "../../interfaces/enums";
 import {
-  useOutletContextProfileProps,
   PlanType,
   PlansModalType,
   PlansCardInfoType,
@@ -13,7 +12,7 @@ import {
 
 export default function PlanSelection() {
   const navigate = useNavigate();
-  const { setLoading } = useOutletContext<useOutletContextProfileProps>();
+  const [loading, setLoading] = useState(false);
   const [plans, setPlans] = useState<PlanType[]>();
   const [open, setOpen] = useState(false);
   const [planModal, setPlanModal] = useState<PlansModalType>();
@@ -44,9 +43,12 @@ export default function PlanSelection() {
     return (
       <>
         <h1 className="text-lg font-bold mb-4">{p.name}</h1>
-        {p.detail && p.detail.map((d) => (
-          <p key={d} className="border-b mb-2 pb-2">{d}</p>
-        ))}
+        {p.detail &&
+          p.detail.map((d) => (
+            <p key={d} className="border-b mb-2 pb-2">
+              {d}
+            </p>
+          ))}
         <h2 className="font-bold mt-4">
           {renderPlanPrice(p.price || 0, p.type)}
         </h2>
@@ -58,7 +60,10 @@ export default function PlanSelection() {
     if (name) navigate(`${ROUTES.NEW}/${slugify(name, { lower: true })}`);
   }
 
-  const handlePlanInfo = (cardPlan: PlanType, cardInfo: PlansCardInfoType): void => {
+  const handlePlanInfo = (
+    cardPlan: PlanType,
+    cardInfo: PlansCardInfoType
+  ): void => {
     setPlanModal({ plan: cardPlan, info: cardInfo });
     setOpen(true);
   };
@@ -67,13 +72,17 @@ export default function PlanSelection() {
     if (type === PLANSTYPES.BASIC) {
       return {
         color: "bg-emerald-500",
-        icon: <i className="bx bx-mail-send text-6xl mb-4 hover:text-emerald-500" />,
+        icon: (
+          <i className="bx bx-mail-send text-6xl mb-4 hover:text-emerald-500" />
+        ),
       };
     }
     if (type === PLANSTYPES.ADVANCED) {
       return {
         color: "bg-orange-500",
-        icon: <i className="bx bxs-message-detail text-6xl mb-4 hover:text-orange-500" />,
+        icon: (
+          <i className="bx bxs-message-detail text-6xl mb-4 hover:text-orange-500" />
+        ),
       };
     }
     return {
@@ -108,6 +117,7 @@ export default function PlanSelection() {
 
   return (
     <>
+      {loading && <Loading />}
       {plans ? (
         <div className="grid sm:grid-cols-3 gap-4">
           {renderPlanCard(PLANSTYPES.BASIC)}

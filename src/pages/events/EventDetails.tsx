@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback, ReactElement } from "react";
-import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
+import {
+  useParams,
+  useLocation,
+  useNavigate,
+  Link,
+  useOutletContext,
+} from "react-router-dom";
 import slugify from "slugify";
 import QRCode from "qrcode";
 import { CSVLink } from "react-csv";
@@ -16,12 +22,18 @@ import {
   PLANSTYPES,
   ROUTES,
 } from "../../interfaces/enums";
-import { EventType, UUID, SurveyType, SurveyPostType, SurveySimpleType } from "../../interfaces/types";
+import {
+  EventType,
+  UUID,
+  SurveyPostType,
+  SurveySimpleType,
+  useOutletContextProfileProps,
+} from "../../interfaces/types";
 import EventsAPI from "../../api/events";
 import { getObjKey, normalizeCEP } from "../../helpers";
 import SurveysAPI from "../../api/surveys";
 import smsPrice from "../../helpers/smsPrice";
-import { LANGUAGES } from '../../interfaces/enums';
+import { LANGUAGES } from "../../interfaces/enums";
 
 const LOGO_MAPS_BUCKET = process.env.REACT_APP_LOGO_MAPS_BUCKET || "";
 const EVENTS_URL = process.env.REACT_APP_EVENTS_URL || "";
@@ -31,7 +43,7 @@ export default function EventDetail() {
   const location = useLocation();
   const navigate = useNavigate();
   const [success] = useState(location?.state?.success || null);
-  const [loading, setLoading] = useState(false);
+  const { setLoading } = useOutletContext<useOutletContextProfileProps>();
   const [over, setOver] = useState<boolean>(false);
   const [event, setEvent] = useState<EventType>();
   const [survey, setSurvey] = useState<SurveyPostType>();
@@ -79,7 +91,9 @@ export default function EventDetail() {
         dates.sort();
         const seeOver = dates[0] <= DateTime.now();
         if (seeOver) setOver(true);
-        const [surveyRes] = await SurveysAPI.getByEnvetID(data?.eventID as string);
+        const [surveyRes] = await SurveysAPI.getByEnvetID(
+          data?.eventID as string
+        );
         setSurvey(surveyRes);
         setSurveys(surveyRes?.surveys || []);
         generateQRCode(eventID);
@@ -90,14 +104,17 @@ export default function EventDetail() {
         navigate(ROUTES.HOME);
       }
     },
-    [generateQRCode, navigate]
+    [generateQRCode, navigate, setLoading]
   );
 
   useEffect(() => {
     if (params.eventID) handleGetEvent(params.eventID);
   }, [handleGetEvent, params.eventID]);
 
-  const renderDescriptionRow = (text: string, description: string): ReactElement => (
+  const renderDescriptionRow = (
+    text: string,
+    description: string
+  ): ReactElement => (
     <div className="p-2 border-b sm:grid sm:grid-cols-12">
       <dt className="text-sm font-medium sm:col-span-2 pr-2">{text}</dt>
       <dl className="text-sm sm:mt-0 sm:col-span-10 font-bold">
@@ -132,7 +149,10 @@ export default function EventDetail() {
     const res = surveys.map((s) => {
       const l = getObjKey(LANGUAGES, s.language) || "";
       return (
-        <Link to={`${ROUTES.SURVEYS}/edit/${survey?.surveyID}/${l}`} className="underline">
+        <Link
+          to={`${ROUTES.SURVEYS}/edit/${survey?.surveyID}/${l}`}
+          className="underline"
+        >
           {LANGUAGESFLAGS[l]} ({s.questions.length})
         </Link>
       );
@@ -145,9 +165,9 @@ export default function EventDetail() {
       <div className="p-2 border-b sm:grid sm:grid-cols-12">
         <dt className="text-sm font-medium sm:col-span-2">Pesquisa:</dt>
         <dl className="text-sm sm:mt-0 sm:col-span-6 font-bold">
-          {(!surveys || !surveys.length) ? "Não Cadastrada" : surveyList()}
+          {!surveys || !surveys.length ? "Não Cadastrada" : surveyList()}
         </dl>
-        {(!over && (!surveys || !surveys.length)) && (
+        {!over && (!surveys || !surveys.length) && (
           <dl className="text-sm sm:mt-0 sm:col-span-4 text-right">
             <button
               type="button"
@@ -269,7 +289,7 @@ export default function EventDetail() {
       {success && (
         <Alert text="Evento Cadastrado com Sucesso" type={ALERT.SUCCESS} />
       )}
-      {!event || loading ? (
+      {!event ? (
         <LoadingSmall />
       ) : (
         <>

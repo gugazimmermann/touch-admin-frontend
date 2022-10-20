@@ -7,18 +7,17 @@ import { COOKIES } from "../../helpers";
 import { ALERT, CONTEXT, ROUTES } from "../../interfaces/enums";
 import ProfileAPI from "../../api/profile";
 import { AppContext } from "../../context";
-import { AlertType, ProfileType } from "../../interfaces/types";
+import { AlertType, ProfileType, UUID } from "../../interfaces/types";
 
 const cookies = new Cookies();
 
 export default function Layout() {
-  const { dispatch } = useContext(AppContext);
+  const { state, dispatch } = useContext(AppContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const handleSignOut = useCallback(async () => {
     await Auth.SignOut();
-    cookies.remove(COOKIES.NAME);
     dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: {} as ProfileType });
     navigate(ROUTES.SIGNIN);
   }, [dispatch, navigate]);
@@ -43,24 +42,30 @@ export default function Layout() {
     [dispatch]
   );
 
-  const seeProfile = async (): Promise<ProfileType> => {
-    let profile = await ProfileAPI.get();
-    if (!profile.profileID) profile = await ProfileAPI.post();
+  const seeProfile = async (sub: UUID, email: string): Promise<ProfileType> => {
+    let profile = await ProfileAPI.get(sub);
+    if (!profile.profileID) {
+      profile = await ProfileAPI.post(sub, email);
+    }
     return profile;
   };
 
-  const loadClient = useCallback(async () => {
-    setLoading(true);
-    const getCookie = COOKIES.Decode(cookies.get(COOKIES.NAME));
-    if (!getCookie?.sub) {
-      navigate(ROUTES.SIGNIN);
-      return;
-    }
-    const profile = await seeProfile();
-    dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: profile });
-    profileAlert(profile);
-    setLoading(false);
-  }, [dispatch, navigate, profileAlert]);
+  const loadClient = useCallback(async (force?: boolean) => {
+      setLoading(true);
+      const getCookie = COOKIES.Decode(cookies.get(COOKIES.NAME));
+      if (!getCookie?.sub) {
+        navigate(ROUTES.SIGNIN);
+        return;
+      }
+      if (!state.profile?.profileID || force) {
+        const profile = await seeProfile(getCookie.sub, getCookie.email);
+        dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: profile });
+        profileAlert(profile);
+      }
+      setLoading(false);
+    },
+    [dispatch, navigate, profileAlert, state.profile.profileID]
+  );
 
   useEffect(() => {
     loadClient();
@@ -71,7 +76,7 @@ export default function Layout() {
       {loading && <Loading />}
       <Nav handleSignOut={handleSignOut} />
       <div className="layout mb-auto h-min p-4 pb-8 bg-slate-100">
-        <Outlet context={{ loadClient, setLoading }} />
+        <Outlet context={{ loadClient }} />
       </div>
     </main>
   );

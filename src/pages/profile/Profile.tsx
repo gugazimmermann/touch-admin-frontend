@@ -11,6 +11,7 @@ import {
   Select,
   InputFile,
   Form,
+  Loading,
 } from "../../components";
 import {
   createMap,
@@ -57,7 +58,8 @@ const initial = {
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { loadClient, setLoading } = useOutletContext<useOutletContextProfileProps>();
+  const { loadClient } = useOutletContext<useOutletContextProfileProps>();
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [profile, setProfile] = useState<ProfileType>();
@@ -221,8 +223,7 @@ export default function Profile() {
     form.document = form.document ? form.document.replace(/[^\d]/g, "") : "";
     form.website = form.website ? normalizeWebsite(form.website || "") : "";
     form.zipCode = form.zipCode ? form.zipCode.replace(/[^\d]/g, "") : "";
-    const updatedProfile = await ProfileAPI.update(form);
-    updateForm(updatedProfile);
+    await ProfileAPI.update(form);
     await handleLogoAndMap(form);
     loadClient(true);
     setLoading(false);
@@ -241,11 +242,13 @@ export default function Profile() {
 
   useEffect(() => {
     setLoading(true);
+    console.log("set loading true")
     getClient();
   }, [getClient, setLoading]);
 
   return (
     <>
+      {loading && <Loading />}
       {!!progress && <Uploading progress={progress} />}
       <Title
         text="Meu Perfil"

@@ -14,6 +14,7 @@ import {
   Form,
   Alert,
   LoadingSmall,
+  Loading,
 } from "../../components";
 import { validateEmail, normalizePhone } from "../../helpers";
 import { ALERT } from "../../interfaces/enums";
@@ -24,6 +25,7 @@ import {
 import ProfileAPI from "../../api/profile";
 import { useOutletContext } from "react-router-dom";
 import { AppContext } from "../../context";
+import { UUID } from '../../interfaces/types';
 
 const initial = {
   name: "",
@@ -32,8 +34,9 @@ const initial = {
 };
 
 export default function Owners(): ReactElement {
-  const { loadClient, setLoading } = useOutletContext<useOutletContextProfileProps>();
+  const { loadClient } = useOutletContext<useOutletContextProfileProps>();
   const { state } = useContext(AppContext);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [ownersList, setOwnersList] = useState<OwnersType[]>([]);
@@ -75,7 +78,7 @@ export default function Owners(): ReactElement {
     if (!u) formOwner.phone = formOwner.phone ? `+55${(formOwner.phone || "").replace(/[^\d]/g, "")}` : "";
     if (u) selected.phone = selected.phone ? `+55${(selected.phone || "").replace(/[^\d]/g, "")}` : "";
     await ProfileAPI.ownerPatch(!u ? formOwner : selected);
-    loadClient();
+    loadClient(true);
     setUpdate(false);
     setFormOwner(initial);
     setLoading(false);
@@ -84,8 +87,8 @@ export default function Owners(): ReactElement {
 
   async function handleDelete(): Promise<void> {
     setLoading(true);
-    await ProfileAPI.ownerPatch({ ownerID: selected.ownerID, email: selected.email });
-    loadClient();
+    await ProfileAPI.ownerDelete(selected.ownerID as UUID);
+    loadClient(true);
     setConfirmDelete(false);
     setLoading(false);
   }
@@ -227,6 +230,7 @@ export default function Owners(): ReactElement {
 
   return (
     <>
+      {loading && <Loading />}
       <Title
         text={`${!update ? "Adicionar" : "Atualizar"} Responsável`}
         className={ update ? "text-warning font-bold text-center" : "font-bold text-center" }

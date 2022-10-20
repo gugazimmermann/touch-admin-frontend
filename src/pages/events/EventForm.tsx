@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useState } from "react";
-import { useNavigate, useOutletContext, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { DateTime } from "luxon";
 import {
   ROUTES,
@@ -15,12 +15,15 @@ import {
   validateEmail,
   validateFile,
 } from "../../helpers";
-import { Form, Uploading, Title, Alert, LoadingSmall } from "../../components";
 import {
-  EventType,
-  PlanType,
-  useOutletContextProfileProps,
-} from "../../interfaces/types";
+  Form,
+  Uploading,
+  Title,
+  Alert,
+  LoadingSmall,
+  Loading,
+} from "../../components";
+import { EventType, PlanType } from "../../interfaces/types";
 import PlansAPI from "../../api/plans";
 import slugify from "slugify";
 import ReferralsAPI from "../../api/referral";
@@ -59,7 +62,7 @@ export default function EventForm() {
   const navigate = useNavigate();
   const params = useParams();
   const { state } = useContext(AppContext);
-  const { setLoading } = useOutletContext<useOutletContextProfileProps>();
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [plan, setPlan] = useState<PlanType>();
@@ -261,7 +264,7 @@ export default function EventForm() {
     });
     await handleLogoAndMap(event);
     setFormEvent(initial);
-    navigate(ROUTES.HOME);
+    navigate(`${ROUTES.HOME}/${event.eventID}`);
     setLoading(false);
     return true;
   };
@@ -309,6 +312,7 @@ export default function EventForm() {
   if (!plan) return <LoadingSmall />;
   return (
     <>
+      {loading && <Loading />}
       {!!progress && <Uploading progress={progress} />}
       <Title
         text={
@@ -360,10 +364,10 @@ export default function EventForm() {
               }
             }}
             className={`${
-              step < 3 ? "bg-secondary" : "bg-primary"
+              step < 4 ? "bg-secondary" : "bg-primary"
             } px-4 py-1.5 text-sm text-white font-semibold uppercase rounded shadow-md cursor-pointer hover:bg-secondary hover:shadow-md focus:bg-secondary focus:shadow-md focus:outline-none focus:ring-0 active:bg-secondary active:shadow-md transition duration-150 ease-in-out`}
           >
-            {step < 3 ? "Continuar" : "Adicionar Novo Evento"}
+            {step < 4 ? "Continuar" : "Adicionar Novo Evento"}
           </button>
         </div>
       </Form>
