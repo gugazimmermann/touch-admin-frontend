@@ -2,10 +2,11 @@ import { Dispatch, createContext, ReactNode, ReactElement, useReducer } from "re
 import LocalStorage from "../api/local-storage";
 import { ContextActions, ContextStateType } from "../interfaces/context";
 import { ContextReducer } from "./reducers";
-import { AlertType, ProfileType } from '../interfaces/types';
+import { AlertType, PlanType, ProfileType } from '../interfaces/types';
 
 const initial: ContextStateType = {
-  profile: LocalStorage.GetItem("state", true)?.client ||  {} as ProfileType,
+  profile: LocalStorage.GetItem("state", true)?.client || {} as ProfileType,
+  plans: LocalStorage.GetItem("state", true)?.plans || [] as PlanType[],
   alerts: [] as AlertType[],
   info: [] as AlertType[],
 };

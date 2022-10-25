@@ -1,8 +1,9 @@
-import { useState, useCallback, useEffect, ReactElement } from "react";
+import { useState, useCallback, useEffect, ReactElement, useContext } from 'react';
 import { useNavigate } from "react-router-dom";
 import slugify from "slugify";
 import PlansAPI from "../../api/plans";
 import { ConfirmationDialog, Loading, LoadingSmall } from "../../components";
+import { AppContext } from '../../context';
 import { PLANSTYPES, ROUTES } from "../../interfaces/enums";
 import {
   PlanType,
@@ -12,6 +13,7 @@ import {
 
 export default function PlanSelection() {
   const navigate = useNavigate();
+  const { state } = useContext(AppContext);
   const [loading, setLoading] = useState(false);
   const [plans, setPlans] = useState<PlanType[]>();
   const [open, setOpen] = useState(false);
@@ -25,8 +27,9 @@ export default function PlanSelection() {
   }, [setLoading]);
 
   useEffect(() => {
-    getPlans();
-  }, [getPlans]);
+    if (!state.plans || !state.plans.length) getPlans();
+    else setPlans(state.plans);
+  }, [getPlans, state.plans]);
 
   const renderPlanPrice = (price: number, type: PLANSTYPES): string => {
     let res = `R$ ${price},00`;

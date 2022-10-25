@@ -2,7 +2,6 @@ import { ReactElement } from "react";
 import {
   ALERT,
   FILETYPES,
-  LANGUAGES,
   MapTypes,
   PlansFrequency,
   PLANSTYPES,

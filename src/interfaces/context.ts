@@ -1,8 +1,9 @@
 import { CONTEXT } from "./enums";
-import { AlertType, ProfileType } from "./types";
+import { AlertType, PlanType, ProfileType } from "./types";
 
 type ContextPayload = {
   [CONTEXT.UPDATE_PROFILE]: ProfileType;
+  [CONTEXT.UPDATE_PLANS]: PlanType[];
   [CONTEXT.UPDATE_ALERTS]: AlertType[];
 };
 
@@ -22,6 +23,7 @@ export type ContextActionMap<M extends { [index: string]: unknown }> = {
 
 export type ContextStateType = {
   profile: ProfileType;
+  plans: PlanType[];
   alerts: AlertType[];
   info: AlertType[];
 };

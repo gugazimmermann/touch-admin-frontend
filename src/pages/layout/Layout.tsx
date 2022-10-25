@@ -8,7 +8,7 @@ import { ALERT, CONTEXT, ROUTES } from "../../interfaces/enums";
 import ProfileAPI from "../../api/profile";
 import { AppContext } from "../../context";
 import { AlertType, ProfileType, UUID } from "../../interfaces/types";
-import MercadoPagoAPI from "../../api/mercadopago";
+import PlansAPI from '../../api/plans';
 
 const cookies = new Cookies();
 
@@ -63,9 +63,13 @@ export default function Layout() {
         dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: profile });
         profileAlert(profile);
       }
+      if (!state.plans || !state.plans.length) {
+        const plans = await PlansAPI.get();
+        dispatch({ type: CONTEXT.UPDATE_PLANS, payload: plans });
+      }
       setLoading(false);
     },
-    [dispatch, navigate, profileAlert, state.profile.profileID]
+    [dispatch, navigate, profileAlert, state.plans, state.profile?.profileID]
   );
 
   useEffect(() => {
