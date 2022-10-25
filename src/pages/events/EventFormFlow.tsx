@@ -7,6 +7,11 @@ type EventFormFlowProps = {
 }
 
 const EventFormFlow = ({step, changeStep, type}: EventFormFlowProps) => {
+
+  const handleChangeStep = (nextStep: number) => {
+    if (nextStep < step) changeStep(nextStep)
+  }
+
   return (
     <ul className="flex flex-col sm:flex-row w-full gap-4 sm:gap-0 justify-evenly mx-auto mb-4">
       <li
@@ -16,7 +21,7 @@ const EventFormFlow = ({step, changeStep, type}: EventFormFlowProps) => {
             : "border-slate-300 text-slate-400"
         }`}
       >
-        <button type="button" onClick={() => changeStep(1)}>
+        <button type="button" onClick={() => handleChangeStep(1)}>
           Dados Gerais
         </button>
       </li>
@@ -30,7 +35,7 @@ const EventFormFlow = ({step, changeStep, type}: EventFormFlowProps) => {
         >
           <button
             type="button"
-            onClick={() => changeStep(2)}
+            onClick={() => handleChangeStep(2)}
           >
             Configurações
           </button>
@@ -43,7 +48,7 @@ const EventFormFlow = ({step, changeStep, type}: EventFormFlowProps) => {
             : "border-slate-300 text-slate-400"
         }`}
       >
-        <button type="button" onClick={() => changeStep(3)}>
+        <button type="button" onClick={() => handleChangeStep(3)}>
           Detalhes
         </button>
       </li>
@@ -54,7 +59,7 @@ const EventFormFlow = ({step, changeStep, type}: EventFormFlowProps) => {
             : "border-slate-300 text-slate-400"
         }`}
       >
-        <button type="button" onClick={() => changeStep(4)}>
+        <button type="button" onClick={() => handleChangeStep(4)}>
           Pagamento
         </button>
       </li>

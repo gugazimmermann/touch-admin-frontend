@@ -35,9 +35,7 @@ export default function AuthLayout() {
     idToken,
   }: CognitoUserType) => {
     cookies.remove(COOKIES.NAME);
-    const encodedContent = COOKIES.Encode(
-      JSON.stringify({ sub, locale, email, idToken })
-    );
+    const encodedContent = COOKIES.Encode(JSON.stringify({ sub, locale, email, idToken }));
     const date = new Date();
     date.setDate(date.getDate() + 365);
     cookies.set(COOKIES.NAME, encodedContent, { expires: date, path: "/" });

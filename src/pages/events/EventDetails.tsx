@@ -4,7 +4,6 @@ import {
   useLocation,
   useNavigate,
   Link,
-  useOutletContext,
 } from "react-router-dom";
 import slugify from "slugify";
 import QRCode from "qrcode";
@@ -13,6 +12,7 @@ import { DateTime } from "luxon";
 import {
   Alert,
   ConfirmationDialog,
+  Loading,
   LoadingSmall,
   Select,
 } from "../../components";
@@ -27,7 +27,6 @@ import {
   UUID,
   SurveyPostType,
   SurveySimpleType,
-  useOutletContextProfileProps,
 } from "../../interfaces/types";
 import EventsAPI from "../../api/events";
 import { getObjKey, normalizeCEP } from "../../helpers";
@@ -43,7 +42,7 @@ export default function EventDetail() {
   const location = useLocation();
   const navigate = useNavigate();
   const [success] = useState(location?.state?.success || null);
-  const { setLoading } = useOutletContext<useOutletContextProfileProps>();
+  const [loading, setLoading] = useState(false);
   const [over, setOver] = useState<boolean>(false);
   const [event, setEvent] = useState<EventType>();
   const [survey, setSurvey] = useState<SurveyPostType>();
@@ -286,6 +285,7 @@ export default function EventDetail() {
 
   return (
     <>
+      {loading && <Loading />}
       {success && (
         <Alert text="Evento Cadastrado com Sucesso" type={ALERT.SUCCESS} />
       )}

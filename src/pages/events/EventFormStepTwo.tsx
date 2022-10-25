@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Input, Select } from "../../components";
 import { PLANSTYPES } from "../../interfaces/enums";
 import { EventType } from "../../interfaces/types";
@@ -6,7 +6,7 @@ import smsPrice from '../../helpers/smsPrice';
 
 type EventsFormStepTwoProps = {
   formEvent: EventType;
-  setFormEvent: Dispatch<SetStateAction<EventType>>;
+  setFormEvent: (formEvent: EventType) => void;
   type: PLANSTYPES;
 }
 

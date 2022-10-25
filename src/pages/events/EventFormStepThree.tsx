@@ -1,5 +1,4 @@
 import MDEditor from "@uiw/react-md-editor";
-import { Dispatch, SetStateAction } from "react";
 import rehypeSanitize from "rehype-sanitize";
 import { Input, InputFile } from "../../components";
 import { PLANSTYPES } from "../../interfaces/enums";
@@ -7,7 +6,7 @@ import { EventType } from "../../interfaces/types";
 
 type EventFormStepThreeProps = {
   formEvent: EventType;
-  setFormEvent: Dispatch<SetStateAction<EventType>>;
+  setFormEvent: (formEvent: EventType) => void;
   type: PLANSTYPES;
   fileName: string;
   handleFile: (e: React.FormEvent<HTMLInputElement>) => void;

@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useContext } from 'react';
 import { useNavigate, useOutletContext } from "react-router-dom";
+import MercadoPagoAPI from '../../api/mercadopago';
 import ProfileAPI from "../../api/profile";
 import { sendPublicFile } from "../../api/storage";
 import {
@@ -13,6 +14,7 @@ import {
   Form,
   Loading,
 } from "../../components";
+import { AppContext } from '../../context';
 import {
   createMap,
   getAddressFromCEP,
@@ -58,6 +60,7 @@ const initial = {
 
 export default function Profile() {
   const navigate = useNavigate();
+  const { state } = useContext(AppContext);
   const { loadClient } = useOutletContext<useOutletContextProfileProps>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -224,6 +227,7 @@ export default function Profile() {
     form.website = form.website ? normalizeWebsite(form.website || "") : "";
     form.zipCode = form.zipCode ? form.zipCode.replace(/[^\d]/g, "") : "";
     await ProfileAPI.update(form);
+    await MercadoPagoAPI.clientPost(state.profile.profileID);
     await handleLogoAndMap(form);
     loadClient(true);
     setLoading(false);
@@ -242,7 +246,6 @@ export default function Profile() {
 
   useEffect(() => {
     setLoading(true);
-    console.log("set loading true")
     getClient();
   }, [getClient, setLoading]);
 
@@ -376,7 +379,7 @@ export default function Profile() {
         </div>
         <div className="w-full md:w-3/12 mb-4">
           <Input
-            type="text"
+            type="number"
             value={form.number || ""}
             placeholder="Número"
             handler={(e) => setForm({ ...form, number: e.target.value })}

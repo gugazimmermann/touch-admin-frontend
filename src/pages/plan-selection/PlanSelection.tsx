@@ -56,8 +56,8 @@ export default function PlanSelection() {
     );
   };
 
-  function choosePlan(name: string): void {
-    if (name) navigate(`${ROUTES.NEW}/${slugify(name, { lower: true })}`);
+  function choosePlan(plan: PlanType): void {
+    if (plan) navigate(`${ROUTES.NEW}/${slugify(plan.name, { lower: true })}`, { state: { plan }});
   }
 
   const handlePlanInfo = (
@@ -105,7 +105,7 @@ export default function PlanSelection() {
         </button>
         <button
           type="button"
-          onClick={() => choosePlan(cardPlan.name)}
+          onClick={() => choosePlan(cardPlan)}
           className={`p-8 hover:text-${cardInfo.color.split("bg-")[1]}`}
         >
           {cardInfo.icon}
@@ -131,7 +131,7 @@ export default function PlanSelection() {
         <ConfirmationDialog
           open={open}
           setOpen={setOpen}
-          handleConfirm={() => choosePlan(planModal?.plan?.name)}
+          handleConfirm={() => choosePlan(planModal?.plan)}
           icon={planModal?.info?.icon}
           cancelText="Fechar"
           confirmText="Selecionar"

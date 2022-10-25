@@ -8,6 +8,7 @@ import { ALERT, CONTEXT, ROUTES } from "../../interfaces/enums";
 import ProfileAPI from "../../api/profile";
 import { AppContext } from "../../context";
 import { AlertType, ProfileType, UUID } from "../../interfaces/types";
+import MercadoPagoAPI from "../../api/mercadopago";
 
 const cookies = new Cookies();
 
@@ -58,7 +59,7 @@ export default function Layout() {
         return;
       }
       if (!state.profile?.profileID || force) {
-        const profile = await seeProfile(getCookie.sub, getCookie.email);
+        let profile = await seeProfile(getCookie.sub, getCookie.email);
         dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: profile });
         profileAlert(profile);
       }

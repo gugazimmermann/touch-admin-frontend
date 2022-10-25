@@ -1,4 +1,3 @@
-import { Dispatch, SetStateAction } from "react";
 import DatePicker from "react-multi-date-picker";
 import { Input, Select } from "../../components";
 import { normalizeCEP } from "../../helpers";
@@ -7,7 +6,7 @@ import { EventType } from "../../interfaces/types";
 
 type EventsFormStepOneProps = {
   formEvent: EventType;
-  setFormEvent: Dispatch<SetStateAction<EventType>>;
+  setFormEvent: (formEvent: EventType) => void;
   type: PLANSTYPES;
 }
 

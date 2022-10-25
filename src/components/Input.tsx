@@ -1,10 +1,11 @@
 import { useState, ReactElement } from 'react';
 
 type InputProps = {
-  type: "password" | "email" | "text";
+  type: "password" | "email" | "text" | "number";
   placeholder?: string;
   value: string | number;
   handler?: (e: { target: HTMLInputElement }) => void;
+  handlerBlur?: (e: { target: HTMLInputElement }) => void;
   disabled?: boolean;
   showTooltip?: boolean;
 };
@@ -14,6 +15,7 @@ const Input = ({
   placeholder,
   value,
   handler,
+  handlerBlur,
   disabled,
   showTooltip,
 }: InputProps): ReactElement => {
@@ -31,6 +33,7 @@ const Input = ({
         type={inputType}
         value={value}
         onChange={handler}
+        onBlur={handlerBlur}
         className="block w-full px-4 py-2 font-normal text-slate-700 bg-stone-100 border border-stone-400 rounded-md m-0"
         placeholder={placeholder}
         disabled={disabled}

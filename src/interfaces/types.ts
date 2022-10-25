@@ -1,5 +1,13 @@
 import { ReactElement } from "react";
-import { ALERT, FILETYPES, LANGUAGES, MapTypes, PlansFrequency, PLANSTYPES, SURVEYANSWER } from './enums';
+import {
+  ALERT,
+  FILETYPES,
+  LANGUAGES,
+  MapTypes,
+  PlansFrequency,
+  PLANSTYPES,
+  SURVEYANSWER,
+} from "./enums";
 
 export type useOutletContextProps = {
   setAlert: (alert: AlertType) => void;
@@ -18,7 +26,6 @@ export type useOutletContextProfileProps = {
   setLoading: (loading?: boolean) => void;
 };
 
-
 export type AlertType = {
   type: ALERT | undefined;
   text: string | undefined;
@@ -28,7 +35,7 @@ export type LocationType = {
   state: {
     email?: string;
     alert?: AlertType;
-  }
+  };
 };
 
 export type CognitoUserType = {
@@ -46,6 +53,40 @@ export type UUID = string;
 interface IDBDates {
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface IMercadoPagoClient {
+  id?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  identification?: {
+    type?: string;
+    number?: string;
+  };
+  phone?: {
+    area_code?: string;
+    number?: string;
+  };
+  address?: {
+    id?: string;
+    zip_code?: string;
+    street_name?: string;
+    street_number?: number;
+    city?: string;
+  };
+  addresses?: string[];
+  cards?: string[];
+  date_created?: string;
+  date_last_updated?: string;
+  date_registered?: string;
+  default_address?: string;
+  default_card?: string;
+  description?: string;
+  live_mode?: string;
+  metadata?: {
+    source_sync?: string;
+  };
 }
 
 export interface IContacts {
@@ -77,26 +118,27 @@ export interface ProfileType extends IDBDates, IAddress, IContacts {
   map?: string;
   logo?: string;
   owners?: OwnersType[];
+  mercadopago?: IMercadoPagoClient;
 }
 
 export type AddressFromCEPType = {
   state: string;
   street: string;
   city: string;
-}
+};
 
 export interface CreateMapType extends IAddress {
-	type: MapTypes;
-	id: string;
-	name: string;
+  type: MapTypes;
+  id: string;
+  name: string;
 }
 
 export type SendPublicFileType = {
-  type: FILETYPES,
-  id: string,
-  file: File,
+  type: FILETYPES;
+  id: string;
+  file: File;
   setProgress: (progress: number) => void;
-}
+};
 
 export type PlanType = {
   planID: UUID;
@@ -105,7 +147,7 @@ export type PlanType = {
   frequency: PlansFrequency;
   detail: string[];
   price: number;
-}
+};
 
 export type PlansCardInfoType = {
   color: string;
@@ -127,9 +169,9 @@ export interface ReferralType extends IDBDates, IAddress, IContacts {
 export interface EventType extends IDBDates, IAddress, IContacts {
   eventID?: UUID;
   profileID?: UUID;
-  planType?: PLANSTYPES,
-  plan?: PlanType,
-  'profileID#PlanType'?: string;
+  planType?: PLANSTYPES;
+  plan?: PlanType;
+  "profileID#PlanType"?: string;
   name: string;
   dates: string[];
   referralCode?: string;
@@ -162,18 +204,18 @@ export interface SurveyType extends IDBDates {
   surveyID: UUID;
   profileID: UUID;
   eventID: UUID;
-  language: string,
-  questions: SurveyQuestionType[]
+  language: string;
+  questions: SurveyQuestionType[];
 }
 
 export type SurveySimpleType = {
-  language: string,
-  questions: SurveyQuestionType[]
-}
+  language: string;
+  questions: SurveyQuestionType[];
+};
 
 export type SurveyPostType = {
   surveyID: UUID;
   profileID: UUID;
   eventID: UUID;
-  surveys: SurveySimpleType[]
-}
+  surveys: SurveySimpleType[];
+};
