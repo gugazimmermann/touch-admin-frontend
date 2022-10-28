@@ -17,7 +17,7 @@ export default function DashboardCard({
     <Link
       to={`${ROUTES.EVENTS}/${content.eventID}`}
       key={content.eventID}
-      className={`flex flex-col justify-between shadow-md rounded-lg ${
+      className={`relative flex flex-col justify-between shadow-md rounded-lg ${
         content.planType === PLANSTYPES.ADVANCED
           ? "bg-orange-50"
           : content.planType === PLANSTYPES.BASIC
@@ -51,6 +51,9 @@ export default function DashboardCard({
             .join(" | ")}
         </p>
       </div>
+      {content.payment?.status !== "approved" && (
+        <i className="absolute bx bxs-error-circle text-xl top-1 right-1 text-primary" />
+      )}
     </Link>
   );
 }
