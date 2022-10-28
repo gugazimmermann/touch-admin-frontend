@@ -1,12 +1,15 @@
 import { ReactElement, useEffect, useState } from "react";
 import useMercadopago from ".";
 import MercadoPagoAPI from "../api/mercadopago";
-import { Form, Input, Select } from "../components";
+import { Alert, Form, Input, Select } from "../components";
+import { normalizeCreditCard, normalizeCreditCardValidate, normalizeDocument } from "../helpers";
+import { ALERT, DOCS } from "../interfaces/enums";
 import { EventType, UUID } from '../interfaces/types';
 import { MercadoPago } from "./protocols";
 import {
   PaymentCardTokenType,
   PaymentCreateCardTokenType,
+  PaymentDataType,
   PaymentFormType,
   PaymentIdentificationsType,
   PaymentInstallmentsType,
@@ -24,6 +27,7 @@ type PaymentModalProps = {
   setAlert: (alert: string) => void;
   event: EventType;
   profileID: UUID;
+  forceReload: () => Promise<void>;
 };
 
 const initialPayment: PaymentFormType = {
@@ -45,16 +49,51 @@ const PaymentModal = ({
   setLoading,
   setAlert,
   event,
-  profileID
+  profileID,
+  forceReload
 }: PaymentModalProps): ReactElement => {
-  const mercadopago = useMercadopago(MERCADO_PAGO_PUBLIC_KEY, {
-    locale: "pt-BR",
-  }) as MercadoPago;
-  const [formPayment, setFormPayment] =
-    useState<PaymentFormType>(initialPayment);
-  const [identificationTypes, setIdentificationTypes] =
-    useState<PaymentIdentificationsType>();
+  const mercadopago = useMercadopago(MERCADO_PAGO_PUBLIC_KEY, { locale: "pt-BR" }) as MercadoPago;
+  const [error, setError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [formPayment, setFormPayment] = useState<PaymentFormType>(initialPayment);
+  const [identificationTypes, setIdentificationTypes] = useState<PaymentIdentificationsType>();
   const [cardImg, setCardImg] = useState("");
+
+  const validadeForm = (f: PaymentFormType) => {
+    if (
+      !f.cardholderName ||
+      !f.documentType ||
+      !f.document ||
+      !f.cardNumber ||
+      !f.cardExpiration ||
+      !f.securityCode ||
+      !f.paymentOption
+    ) {
+      setErrorMsg("Preencha os campos obrigatórios!");
+      return false;
+    }
+    if (
+      (f.documentType === DOCS.CPF && f.document.length < 14) ||
+      (f.documentType === DOCS.CNPJ && f.document.length < 18)
+    ) {
+      setErrorMsg(f.documentType === DOCS.CPF ? "CPF inválido!" : "CNPJ inválido");
+      return false;
+    }
+
+    if (f.cardNumber.replace(/[^\d]/g, "").length < 15) {
+      setErrorMsg("Número do Cartão Inválido!");
+      return false;
+    }
+    if (f.cardExpiration.replace(/[^\d]/g, "").length < 4) {
+      setErrorMsg("Data de Validade Inválida!");
+      return false;
+    }
+    if (f.securityCode.replace(/[^\d]/g, "").length < 3) {
+      setErrorMsg("Código de Seguraça Inválido!");
+      return false;
+    }
+    return true;
+  }
 
   const getCardData = async (card: string): Promise<void> => {
     if (card) {
@@ -120,19 +159,25 @@ const PaymentModal = ({
   };
 
   const handlePayment = async () => {
+    setErrorMsg("");
+    setError(false);
     setLoading(true);
     setAlert("");
+    if (!validadeForm({ ...formPayment })) {
+      setError(true);
+      setLoading(false);
+      return false;
+    }
     const cardToken = await getCardToken({
       cardNumber: formPayment?.cardNumber?.replace(/\D/g, "") || "",
       cardholderName: formPayment?.cardholderName || "",
       cardExpirationMonth: formPayment?.cardExpiration?.split("/")[0] || "",
-      cardExpirationYear:
-        `20${formPayment?.cardExpiration?.split("/")[1]}` || "",
+      cardExpirationYear: `20${formPayment?.cardExpiration?.split("/")[1]}` || "",
       securityCode: formPayment?.securityCode || "",
       identificationType: formPayment?.documentType || "",
-      identificationNumber: formPayment?.document || "",
+      identificationNumber: formPayment?.document?.replace(/\D/g, "") || "",
     });
-    const res = await MercadoPagoAPI.paymentPost({
+    const paymentData: PaymentDataType = {
       installments: Number(formPayment.paymentOption),
       issuer_id: formPayment?.issuer?.id as string,
       identification: {
@@ -143,8 +188,10 @@ const PaymentModal = ({
       token: cardToken.id,
       profileID: profileID,
       eventID: event.eventID as UUID,
-    });
+    }
+    const res = await MercadoPagoAPI.paymentPost(paymentData);
     setFormPayment(initialPayment);
+    await forceReload();
     if (res.payment?.status !== "approved") setAlert("Pagamento Recusado, tente novamente.");
     setOpen(!open);
     setLoading(false);
@@ -168,6 +215,7 @@ const PaymentModal = ({
               <span className="sr-only">Close modal</span>
             </button>
             <div className="p-6 text-center">
+            {error && <Alert type={ALERT.ERROR} text={errorMsg} />}
               <h1 className="font-bold">{`Evento: ${event.name}`}</h1>
               <h2 className="font-bold -mb-4">{`Plano: ${event.plan?.name} - R$ ${event.plan?.price},00`}</h2>
               <Form>
@@ -210,12 +258,15 @@ const PaymentModal = ({
                 <div className="w-full md:w-4/12 mb-4">
                   <Input
                     type="text"
-                    placeholder="Documento *"
+                    placeholder={`${formPayment.documentType || "Documento"} *`}
                     value={formPayment?.document || ""}
                     handler={(e) =>
                       setFormPayment({
                         ...formPayment,
-                        document: e.target.value,
+                        document: normalizeDocument(
+                          formPayment.documentType as DOCS,
+                          e.target.value
+                        ),
                       })
                     }
                   />
@@ -229,7 +280,7 @@ const PaymentModal = ({
                     handler={(e) =>
                       setFormPayment({
                         ...formPayment,
-                        cardNumber: e.target.value,
+                        cardNumber: normalizeCreditCard(e.target.value),
                       })
                     }
                   />
@@ -245,7 +296,7 @@ const PaymentModal = ({
                     handler={(e) =>
                       setFormPayment({
                         ...formPayment,
-                        cardExpiration: e.target.value,
+                        cardExpiration: normalizeCreditCardValidate(e.target.value),
                       })
                     }
                   />

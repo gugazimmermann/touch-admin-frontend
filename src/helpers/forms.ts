@@ -117,3 +117,22 @@ export const normalizeWebsite = (w: string): string => {
   if (w.charAt(w.length - 1) === "/") w = w.slice(0, -1);
   return w;
 }
+
+export const normalizeCreditCard = (cc: string): string => {
+  if (!cc) return "";
+  const value = cc.replace(/[^\d]/g, "");
+  const ccLength = value.length
+  if (ccLength < 4) return value;
+  if (ccLength < 8) return `${value.slice(0, 4)} ${value.slice(4)}`;
+  if (ccLength < 12) return `${value.slice(0, 4)} ${value.slice(4, 8)} ${value.slice(8)}`;
+  if (ccLength === 15) return `${value.slice(0, 4)} ${value.slice(4, 10)} ${value.slice(10)}`;
+  else return `${value.slice(0, 4)} ${value.slice(4, 8)} ${value.slice(8, 12)} ${value.slice(12)}`;
+}
+
+export const normalizeCreditCardValidate = (date: string): string => {
+  if (!date) return "";
+  const value = date.replace(/[^\d]/g, "");
+  const vLength = value.length
+  if (vLength < 3) return value;
+  return `${value.slice(0, 2)}/${value.slice(2, 4)}`;
+}

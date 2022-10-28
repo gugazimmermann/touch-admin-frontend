@@ -92,8 +92,7 @@ export default function EventDetail() {
     return `${referral?.code} - ${referral?.company} | ${referral?.contact}`;
   };
 
-  const handleGetEvent = useCallback(
-    async (eventID: UUID) => {
+  const handleGetEvent = useCallback(async (eventID: UUID) => {
       setLoading(true);
       const data = await EventsAPI.getByEnvetID(eventID);
       if (data.planType === PLANSTYPES.ADVANCED) {
@@ -123,6 +122,10 @@ export default function EventDetail() {
     [generateQRCode, navigate, setLoading]
   );
 
+  const forceReload = async () => {
+    await handleGetEvent(event?.eventID as UUID);
+  }
+
   useEffect(() => {
     if (params.eventID) handleGetEvent(params.eventID);
     else navigate(ROUTES.HOME);
@@ -133,7 +136,7 @@ export default function EventDetail() {
       <div className="p-2 border-b sm:grid sm:grid-cols-12">
         <dt className="text-sm font-medium sm:col-span-2">Pagamento:</dt>
         <dl className="text-sm sm:mt-0 sm:col-span-6 font-bold">
-          {status ? status  === "approved" ? "Aprovado" : "Recusado" : "Em Aberto"}
+          {status  === "approved" ? "Aprovado" : "Em Aberto"}
         </dl>
         {status !== "approved" && (
           <dl className="text-sm sm:mt-0 sm:col-span-4 text-right">
@@ -387,6 +390,7 @@ export default function EventDetail() {
           setAlert={setAlert}
           event={event as EventType}
           profileID={state.profile.profileID}
+          forceReload={forceReload}
         />
       )}
     </>
