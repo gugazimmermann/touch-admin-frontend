@@ -237,11 +237,11 @@ export default function EventForm() {
     await EventsAPI.logoAndMapPatch(f.eventID as string, logoURL, mapURL);
   };
 
-  const handleSaveEvent = async (): Promise<EventType> => {
+  const handleSaveEvent = async () => {
     const fomartedDates = formEvent.dates.map((d: string) =>
       DateTime.fromFormat(d, "dd/MM/yyyy").toFormat("yyyy-MM-dd")
     );
-    return await EventsAPI.post({
+    const saveEvent = {
       ...formEvent,
       profileID: state.profile.profileID,
       planType: plan?.type,
@@ -254,8 +254,9 @@ export default function EventForm() {
       dates: fomartedDates,
       gift: formEvent.gift === "Não" ? 0 : 1,
       prizeDraw: formEvent.prizeDraw === "Não" ? 0 : 1,
-      referral: formEvent.referral,
-    });
+      referralCode: (formEvent?.referralCode || "").toLocaleUpperCase(),
+    }
+    return await EventsAPI.post(saveEvent);
   };
 
   const handleAdd = async () => {
