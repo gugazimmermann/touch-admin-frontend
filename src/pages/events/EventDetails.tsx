@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback, ReactElement } from "react";
 import {
-  useParams,
-  useLocation,
-  useNavigate,
-  Link,
-} from "react-router-dom";
+  useState,
+  useEffect,
+  useCallback,
+  ReactElement,
+  useContext,
+} from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import slugify from "slugify";
 import QRCode from "qrcode";
 import { CSVLink } from "react-csv";
@@ -27,22 +28,25 @@ import {
   UUID,
   SurveyPostType,
   SurveySimpleType,
+  ReferralType,
 } from "../../interfaces/types";
 import EventsAPI from "../../api/events";
 import { getObjKey, normalizeCEP } from "../../helpers";
 import SurveysAPI from "../../api/surveys";
 import smsPrice from "../../helpers/smsPrice";
 import { LANGUAGES } from "../../interfaces/enums";
+import PaymentModal from "../../mercadopago/paymentModal";
+import { AppContext } from "../../context";
 
 const LOGO_MAPS_BUCKET = process.env.REACT_APP_LOGO_MAPS_BUCKET || "";
 const EVENTS_URL = process.env.REACT_APP_EVENTS_URL || "";
 
 export default function EventDetail() {
   const params = useParams();
-  const location = useLocation();
   const navigate = useNavigate();
-  const [success] = useState(location?.state?.success || null);
+  const { state } = useContext(AppContext);
   const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState("");
   const [over, setOver] = useState<boolean>(false);
   const [event, setEvent] = useState<EventType>();
   const [survey, setSurvey] = useState<SurveyPostType>();
@@ -53,6 +57,7 @@ export default function EventDetail() {
   const [sms, setSMS] = useState(0);
   const [showMethodModal, setShowMethodModal] = useState<boolean>(false);
   const [newMethod, setNewMethod] = useState<string>("");
+  const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
 
   const generateQRCode = useCallback(async (eventID: UUID) => {
     try {
@@ -73,6 +78,18 @@ export default function EventDetail() {
       event.zipCode as string
     )}`;
     return address || "";
+  };
+
+  const formatEventDays = (dates: string[]): string => {
+    return dates
+      .map(
+        (d) => `${DateTime.fromFormat(d, "yyyy-MM-dd").toFormat("dd/MM/yy")}`
+      )
+      .join(", ");
+  };
+
+  const formatReferal = (referral: ReferralType): string => {
+    return `${referral?.code} - ${referral?.company} | ${referral?.contact}`;
   };
 
   const handleGetEvent = useCallback(
@@ -108,7 +125,30 @@ export default function EventDetail() {
 
   useEffect(() => {
     if (params.eventID) handleGetEvent(params.eventID);
-  }, [handleGetEvent, params.eventID]);
+    else navigate(ROUTES.HOME);
+  }, [handleGetEvent, navigate, params.eventID]);
+
+  const renderPaymentRow = (status: string | undefined): ReactElement => {
+    return (
+      <div className="p-2 border-b sm:grid sm:grid-cols-12">
+        <dt className="text-sm font-medium sm:col-span-2">Pagamento:</dt>
+        <dl className="text-sm sm:mt-0 sm:col-span-6 font-bold">
+          {status ? status  === "approved" ? "Aprovado" : "Recusado" : "Em Aberto"}
+        </dl>
+        {status !== "approved" && (
+          <dl className="text-sm sm:mt-0 sm:col-span-4 text-right">
+            <button
+              type="button"
+              className="px-2 py-0.5 bg-purple-300 border-purple-500 text-black rounded-lg"
+              onClick={() => setShowPaymentModal(!showMethodModal)}
+            >
+              Pagar
+            </button>
+          </dl>
+        )}
+      </div>
+    );
+  };
 
   const renderDescriptionRow = (
     text: string,
@@ -131,15 +171,17 @@ export default function EventDetail() {
             ? `SMS (R$ ${sms} por envio - apox.)`
             : "Email"}
         </dl>
-        <dl className="text-sm sm:mt-0 sm:col-span-4 text-right">
-          <button
-            type="button"
-            className="px-2 py-0.5 bg-orange-300 border-orange-500 text-white rounded-lg"
-            onClick={() => setShowMethodModal(!showMethodModal)}
-          >
-            Alterar
-          </button>
-        </dl>
+        {event?.planType === PLANSTYPES.ADVANCED && (
+          <dl className="text-sm sm:mt-0 sm:col-span-4 text-right">
+            <button
+              type="button"
+              className="px-2 py-0.5 bg-orange-300 border-orange-500 text-white rounded-lg"
+              onClick={() => setShowMethodModal(!showMethodModal)}
+            >
+              Alterar
+            </button>
+          </dl>
+        )}
       </div>
     );
   };
@@ -213,17 +255,6 @@ export default function EventDetail() {
     </div>
   );
 
-  const renderQRCodeCard = (name: string): ReactElement => (
-    <a
-      href={qr}
-      download={`${slugify(name, { lower: true })}.png`}
-      className="cursor-pointer w-full flex flex-col justify-center items-center text-secondary"
-    >
-      <img src={qr} alt="qr code" />
-      <h2 className="text-lg font-bold text-center mb-2">QR-Code Download</h2>
-    </a>
-  );
-
   const renderImg = (img: string | undefined, name: string): ReactElement => {
     return img ? (
       <a
@@ -233,7 +264,7 @@ export default function EventDetail() {
         <img
           src={`https://${LOGO_MAPS_BUCKET}.s3.amazonaws.com${img}`}
           alt={name}
-          className="w-full h-full object-center object-cover group-hover:opacity-75"
+          className="w-full h-full object-contain group-hover:opacity-75 max-h-44"
         />
       </a>
     ) : (
@@ -246,29 +277,38 @@ export default function EventDetail() {
   };
 
   const renderLogoCard = (event: EventType): ReactElement => (
-    <div className="w-full md:w-3/12">
-      <div className="bg-white shadow-md overflow-hidden rounded-lg mb-4">
+    <div className="w-full">
+      <div className="bg-white shadow-md overflow-hidden rounded-lg">
         {renderImg(event.logo, event.name)}
-        <div className="my-2 text-center">
-          <h3 className="font-bold">{event.name}</h3>
-          <p className="mt-1 text-sm">
-            {event.dates
-              .map(
-                (d) =>
-                  `${DateTime.fromFormat(d, "yyyy-MM-dd").toFormat("dd/MM/yy")}`
-              )
-              .join(", ")}
-          </p>
-        </div>
-        {!over && (
-          <button
-            type="button"
-            onClick={() => navigate(`${ROUTES.EDIT}/${event.eventID}`)}
-            className="px-2 py-1 w-full bg-orange-300 border-orange-500 text-white rounded-b-lg"
-          >
-            Editar
-          </button>
-        )}
+      </div>
+    </div>
+  );
+
+  const renderMapCard = (event: EventType): ReactElement => (
+    <div className="w-full">
+      <div className="bg-white shadow-md overflow-hidden rounded-lg">
+        {renderImg(event.map, event.name)}
+      </div>
+    </div>
+  );
+
+  const renderQRCodeCard = (name: string): ReactElement => (
+    <div className="w-full">
+      <div className="bg-white shadow-md overflow-hidden rounded-lg">
+        <a
+          href={qr}
+          download={`${slugify(`${name}-qrcode`, { lower: true })}.png`}
+          className="cursor-pointer w-full flex flex-col justify-center items-center text-secondary"
+        >
+          <img
+            src={qr}
+            alt="qr code"
+            className="w-full h-full object-contain group-hover:opacity-75 max-h-44"
+          />
+          <h2 className="text-lg font-bold text-center mb-2">
+            QR-Code Download
+          </h2>
+        </a>
       </div>
     </div>
   );
@@ -285,54 +325,38 @@ export default function EventDetail() {
 
   return (
     <>
+      {alert && <Alert type={ALERT.WARNING} text={alert} />}
       {loading && <Loading />}
-      {success && (
-        <Alert text="Evento Cadastrado com Sucesso" type={ALERT.SUCCESS} />
-      )}
-      {!event ? (
-        <LoadingSmall />
-      ) : (
-        <>
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            {renderLogoCard(event)}
-            <div className="w-full md:w-3/12 flex flex-rowv md:flex-col">
-              <div className="bg-white shadow-md overflow-hidden rounded-lg mb-2 sm:w-6/12 md:w-full sm:mr-4">
-                {over
-                  ? renderDashboardCard(10, event.eventID as UUID)
-                  : renderQRCodeCard(event.name)}
-              </div>
-              {over && data && (
-                <CSVLink
-                  data={data}
-                  headers={headers}
-                  filename={slugify(event.name, { lower: true })}
-                  className="px-2 py-1 bg-secondary text-white rounded-lg mb-2 shadow-md text-center font-bold"
-                >
-                  <i className="bx bxs-download" /> Exportar Dados
-                </CSVLink>
-              )}
-              {over && renderWinnerCard()}
+      {event && (
+        <div>
+          <div className="flex flex-col-reverse sm:flex-row gap-4 w-full">
+            <div className="flex-1">
+              <dl className="bg-white shadow-md rounded-lg">
+                {renderPaymentRow(event?.payment?.status)}
+                {renderDescriptionRow("Nome:", event.name || "")}
+                {renderDescriptionRow("Dias:", formatEventDays(event.dates))}
+                {renderDescriptionRow("Plano:", event.plan?.name || "")}
+                {renderMethodRow()}
+                {renderSurveyRow()}
+                {event.website &&
+                  renderDescriptionRow("Website", event.website)}
+                {event.email && renderDescriptionRow("Email", event.email)}
+                {renderDescriptionRow("Endereço:", formatAddress(event))}
+                {event.referral &&
+                  renderDescriptionRow(
+                    "Referência:",
+                    formatReferal(event.referral)
+                  )}
+              </dl>
+            </div>
+            <div className="flex flex-row w-full gap-4 self-center sm:flex-col sm:w-3/12 sm:gap-2 sm:self-start">
+              {event.payment?.status === "approved" &&
+                renderQRCodeCard(event.name)}
+              {renderLogoCard(event)}
+              {renderMapCard(event)}
             </div>
           </div>
-          <div className="shadow-md rounded-lg flex flex-col sm:flex-row">
-            <dl className="flex-1">
-              {renderDescriptionRow("Plano:", event.plan?.name || "")}
-              {renderMethodRow()}
-              {renderSurveyRow()}
-              {event.website && renderDescriptionRow("Website", event.website)}
-              {event.email && renderDescriptionRow("Email", event.email)}
-              {renderDescriptionRow("Endereço:", formatAddress(event))}
-              {event.referral &&
-                renderDescriptionRow(
-                  "Referência:",
-                  `${event.referral.code} - ${event.referral.company} | ${event.referral.contact}`
-                )}
-            </dl>
-            <div className="px-4 py-4 flex-none w-4/12 justify-center">
-              {renderImg(event.map, event.name)}
-            </div>
-          </div>
-        </>
+        </div>
       )}
       {showMethodModal && (
         <ConfirmationDialog
@@ -354,6 +378,16 @@ export default function EventDetail() {
             </>
           </Select>
         </ConfirmationDialog>
+      )}
+      {showPaymentModal && (
+        <PaymentModal
+          open={showPaymentModal}
+          setOpen={setShowPaymentModal}
+          setLoading={setLoading}
+          setAlert={setAlert}
+          event={event as EventType}
+          profileID={state.profile.profileID}
+        />
       )}
     </>
   );

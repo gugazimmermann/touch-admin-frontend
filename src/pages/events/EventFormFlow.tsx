@@ -52,17 +52,6 @@ const EventFormFlow = ({step, changeStep, type}: EventFormFlowProps) => {
           Detalhes
         </button>
       </li>
-      <li
-        className={`border-b-2 px-4 ${
-          step === 4
-            ? "border-primary font-bold"
-            : "border-slate-300 text-slate-400"
-        }`}
-      >
-        <button type="button" onClick={() => handleChangeStep(4)}>
-          Pagamento
-        </button>
-      </li>
     </ul>
   );
 }

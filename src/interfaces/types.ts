@@ -183,6 +183,9 @@ export interface EventType extends IDBDates, IAddress, IContacts {
   description?: string;
   map?: string;
   logo?: string;
+  payment?: {
+    status: string;
+  }
 }
 
 export interface SurveyAnswerType extends IDBDates {

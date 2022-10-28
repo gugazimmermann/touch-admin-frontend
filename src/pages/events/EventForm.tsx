@@ -23,7 +23,7 @@ import {
   LoadingSmall,
   Loading,
 } from "../../components";
-import { EventType, PlanType, UUID } from '../../interfaces/types';
+import { EventType, PlanType } from '../../interfaces/types';
 import PlansAPI from "../../api/plans";
 import slugify from "slugify";
 import ReferralsAPI from "../../api/referral";
@@ -34,19 +34,6 @@ import EventFormFlow from "./EventFormFlow";
 import EventsFormStepOne from "./EventsFormStepOne";
 import EventFormStepTwo from "./EventFormStepTwo";
 import EventFormStepThree from "./EventFormStepThree";
-import EventFormStepFour from "./EventFormStepFour";
-import {
-  PaymentCardTokenType,
-  PaymentCreateCardTokenType,
-  PaymentDataType,
-  PaymentFormType,
-} from "../../mercadopago/types";
-import useMercadopago from "../../mercadopago";
-import { MercadoPago } from "../../mercadopago/protocols";
-import MercadoPagoAPI from "../../api/mercadopago";
-
-const MERCADO_PAGO_PUBLIC_KEY =
-  process.env.REACT_APP_MERCADO_PAGO_PUBLIC_KEY_TEST || "";
 
 const initial: EventType = {
   name: "",
@@ -71,34 +58,17 @@ const initial: EventType = {
   logo: "",
 };
 
-const initialPayment: PaymentFormType = {
-  cardholderName: "",
-  documentType: "",
-  document: "",
-  cardNumber: "",
-  cardExpiration: "",
-  securityCode: "",
-  paymentOption: "",
-  installmentOptions: undefined,
-  paymentMethod: undefined,
-  issuer: undefined,
-};
-
 export default function EventForm() {
   const navigate = useNavigate();
   const params = useParams();
   const location = useLocation();
   const { state } = useContext(AppContext);
-  const mercadopago = useMercadopago(MERCADO_PAGO_PUBLIC_KEY, {
-    locale: "pt-BR",
-  }) as MercadoPago;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [plan, setPlan] = useState<PlanType>();
   const [step, setStep] = useState(1);
   const [formEvent, setFormEvent] = useState<EventType>(initial);
-  const [formPayment, setFormPayment] = useState<PaymentFormType>(initialPayment);
   const [eventLogo, setEventLogo] = useState<File>();
   const [fileName, setFileName] = useState("Logo");
   const [progress, setProgress] = useState<number>(0);
@@ -267,50 +237,6 @@ export default function EventForm() {
     await EventsAPI.logoAndMapPatch(f.eventID as string, logoURL, mapURL);
   };
 
-  const getCardToken = async (
-    data: PaymentCreateCardTokenType
-  ): Promise<PaymentCardTokenType> => {
-    try {
-      return await mercadopago.createCardToken({
-        cardNumber: data.cardNumber,
-        cardholderName: data.cardholderName,
-        cardExpirationMonth: data.cardExpirationMonth,
-        cardExpirationYear: data.cardExpirationYear,
-        securityCode: data.securityCode,
-        identificationType: data.identificationType,
-        identificationNumber: data.identificationNumber,
-      });
-    } catch (err: any) {
-      console.log(err);
-      return {} as PaymentCardTokenType;
-    }
-  };
-
-  const handlePayment = async (event: EventType) => {
-    const cardToken = await getCardToken({
-      cardNumber: formPayment?.cardNumber?.replace(/\D/g, "") || "",
-      cardholderName: formPayment?.cardholderName || "",
-      cardExpirationMonth: formPayment?.cardExpiration?.split("/")[0] || "",
-      cardExpirationYear:
-        `20${formPayment?.cardExpiration?.split("/")[1]}` || "",
-      securityCode: formPayment?.securityCode || "",
-      identificationType: formPayment?.documentType || "",
-      identificationNumber: formPayment?.document || "",
-    });
-    await MercadoPagoAPI.paymentPost({
-      installments: Number(formPayment.paymentOption),
-      issuer_id: formPayment?.issuer?.id as string,
-      identification: {
-        type: formPayment.documentType as string,
-        number: formPayment.document as string,
-      },
-      payment_method_id: formPayment?.paymentMethod?.id as string,
-      token: cardToken.id,
-      profileID: state.profile.profileID,
-      eventID: event.eventID as UUID,
-    });
-  };
-
   const handleSaveEvent = async (): Promise<EventType> => {
     const fomartedDates = formEvent.dates.map((d: string) =>
       DateTime.fromFormat(d, "dd/MM/yyyy").toFormat("yyyy-MM-dd")
@@ -341,7 +267,6 @@ export default function EventForm() {
     }
     const event = await handleSaveEvent();
     await handleLogoAndMap(event);
-    await handlePayment(event);
     setFormEvent(initial);
     setLoading(false);
     navigate(`${ROUTES.EVENTS}/${event.eventID}`);
@@ -436,32 +361,24 @@ export default function EventForm() {
             handleFile={handleFile}
           />
         )}
-        {step === 4 && (
-          <EventFormStepFour
-            mercadopago={mercadopago}
-            formPayment={formPayment}
-            setFormPayment={setFormPayment}
-            plan={plan}
-          />
-        )}
         <div className="w-full flex justify-center">
           <button
             type="button"
             onClick={() => {
-              if (step === 4) handleAdd();
+              if (step === 3) handleAdd();
               else {
                 if (plan.type === PLANSTYPES.ADVANCED) changeStep(step + 1);
                 else {
                   if (step === 1) changeStep(3);
-                  else changeStep(4);
+                  else changeStep(3);
                 }
               }
             }}
             className={`${
-              step < 4 ? "bg-secondary" : "bg-primary"
+              step < 3 ? "bg-secondary" : "bg-primary"
             } px-4 py-1.5 text-sm text-white font-semibold uppercase rounded shadow-md cursor-pointer hover:bg-secondary hover:shadow-md focus:bg-secondary focus:shadow-md focus:outline-none focus:ring-0 active:bg-secondary active:shadow-md transition duration-150 ease-in-out`}
           >
-            {step < 4 ? "Continuar" : "Adicionar Novo Evento"}
+            {step < 3 ? "Continuar" : "Adicionar Novo Evento"}
           </button>
         </div>
       </Form>
