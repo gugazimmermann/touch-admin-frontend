@@ -2,6 +2,7 @@ import { Auth as AmplifyAuth } from "aws-amplify";
 import Cookies from "universal-cookie";
 import { COOKIES } from "../helpers";
 import { CognitoUserType } from "../interfaces/types";
+import LocalStorage from './local-storage';
 
 const cookies = new Cookies();
 
@@ -39,8 +40,9 @@ const GetUser = async (): Promise<CognitoUserType> => {
 };
 
 const SignOut = async (): Promise<void> => {
-  await AmplifyAuth.signOut({ global: true });
   cookies.remove(COOKIES.NAME);
+  LocalStorage.Delete();
+  await AmplifyAuth.signOut({ global: true });
 };
 
 const ChangeLanguage = async (locale: string): Promise<void> => {

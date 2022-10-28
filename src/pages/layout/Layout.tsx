@@ -18,8 +18,8 @@ export default function Layout() {
   const [loading, setLoading] = useState(false);
 
   const handleSignOut = useCallback(async () => {
-    await Auth.SignOut();
     dispatch({ type: CONTEXT.UPDATE_PROFILE, payload: {} as ProfileType });
+    await Auth.SignOut();
     navigate(ROUTES.SIGNIN);
   }, [dispatch, navigate]);
 

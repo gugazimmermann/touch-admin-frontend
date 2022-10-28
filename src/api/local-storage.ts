@@ -32,6 +32,8 @@ const Save = (name: string, obj: GenericObject | GenericObject[], cryto?: boolea
   localStorage.setItem(ls, JSON.stringify({ ...storage }))
 }
 
-const LocalStorage = { Save, GetItem }
+const Delete = (): void => localStorage.removeItem(ls);
+
+const LocalStorage = { Save, GetItem, Delete }
 
 export default LocalStorage;
