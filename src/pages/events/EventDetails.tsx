@@ -92,7 +92,8 @@ export default function EventDetail() {
     return `${referral?.code} - ${referral?.company} | ${referral?.contact}`;
   };
 
-  const handleGetEvent = useCallback(async (eventID: UUID) => {
+  const handleGetEvent = useCallback(
+    async (eventID: UUID) => {
       setLoading(true);
       const data = await EventsAPI.getByEnvetID(eventID);
       if (data.planType === PLANSTYPES.ADVANCED) {
@@ -124,7 +125,7 @@ export default function EventDetail() {
 
   const forceReload = async () => {
     await handleGetEvent(event?.eventID as UUID);
-  }
+  };
 
   useEffect(() => {
     if (params.eventID) handleGetEvent(params.eventID);
@@ -136,7 +137,7 @@ export default function EventDetail() {
       <div className="p-2 border-b sm:grid sm:grid-cols-12">
         <dt className="text-sm font-medium sm:col-span-2">Pagamento:</dt>
         <dl className="text-sm sm:mt-0 sm:col-span-6 font-bold">
-          {status  === "approved" ? "Aprovado" : "Em Aberto"}
+          {status === "approved" ? "Aprovado" : "Em Aberto"}
         </dl>
         {status !== "approved" && (
           <dl className="text-sm sm:mt-0 sm:col-span-4 text-right">
@@ -337,7 +338,8 @@ export default function EventDetail() {
               <dl className="bg-white shadow-md rounded-lg">
                 {renderPaymentRow(event?.payment?.status)}
                 {renderDescriptionRow("Nome:", event.name || "")}
-                {renderDescriptionRow("Dias:", formatEventDays(event.dates))}
+                {event.planType !== PLANSTYPES.SUBSCRIPTION &&
+                  renderDescriptionRow("Dias:", formatEventDays(event.dates))}
                 {renderDescriptionRow("Plano:", event.plan?.name || "")}
                 {renderMethodRow()}
                 {renderSurveyRow()}

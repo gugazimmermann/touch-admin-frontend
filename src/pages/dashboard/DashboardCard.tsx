@@ -15,7 +15,7 @@ export default function DashboardCard({
 }: DashboardCardProps): ReactElement {
   return (
     <Link
-      to={`${ROUTES.EVENTS}/${content.eventID}`}
+      to={content.planType === PLANSTYPES.SUBSCRIPTION ? `${ROUTES.SUBSCRIPTIONS}/${content.eventID}` : `${ROUTES.EVENTS}/${content.eventID}`}
       key={content.eventID}
       className={`relative flex flex-col justify-between shadow-md rounded-lg ${
         content.planType === PLANSTYPES.ADVANCED

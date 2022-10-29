@@ -23,7 +23,7 @@ import {
   LoadingSmall,
   Loading,
 } from "../../components";
-import { EventType, PlanType } from '../../interfaces/types';
+import { EventType, PlanType } from "../../interfaces/types";
 import PlansAPI from "../../api/plans";
 import slugify from "slugify";
 import ReferralsAPI from "../../api/referral";
@@ -255,7 +255,7 @@ export default function EventForm() {
       gift: formEvent.gift === "Não" ? 0 : 1,
       prizeDraw: formEvent.prizeDraw === "Não" ? 0 : 1,
       referralCode: (formEvent?.referralCode || "").toLocaleUpperCase(),
-    }
+    };
     return await EventsAPI.post(saveEvent);
   };
 
@@ -379,7 +379,11 @@ export default function EventForm() {
               step < 3 ? "bg-secondary" : "bg-primary"
             } px-4 py-1.5 text-sm text-white font-semibold uppercase rounded shadow-md cursor-pointer hover:bg-secondary hover:shadow-md focus:bg-secondary focus:shadow-md focus:outline-none focus:ring-0 active:bg-secondary active:shadow-md transition duration-150 ease-in-out`}
           >
-            {step < 3 ? "Continuar" : "Adicionar Novo Evento"}
+            {step < 3
+              ? "Continuar"
+              : plan.type === PLANSTYPES.SUBSCRIPTION
+              ? "Adicionar Nova Assinatura"
+              : "Adicionar Novo Evento"}
           </button>
         </div>
       </Form>

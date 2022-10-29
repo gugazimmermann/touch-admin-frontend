@@ -41,6 +41,7 @@ function App() {
           <Route path={ROUTES.NEW} element={<PlanSelection />} />
           <Route path={`${ROUTES.NEW}/:name`} element={<EventForm />} />
           <Route path={`${ROUTES.EVENTS}/:eventID`} element={<EventDetails />} />
+          <Route path={`${ROUTES.SUBSCRIPTIONS}/:eventID`} element={<EventDetails />} />
           <Route path={`${ROUTES.EDIT}/:eventID`} element={<EventForm />} />
           <Route path={`${ROUTES.SURVEYS}/adicionar/:eventID`} element={<SurveysAdd />} />
           <Route path={`${ROUTES.SURVEYS}/edit/:surveyID/:language`} element={<SurveysEdit />} />
