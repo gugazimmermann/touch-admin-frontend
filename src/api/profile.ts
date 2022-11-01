@@ -17,8 +17,12 @@ export const get = async (sub?: UUID): Promise<ProfileType> => {
 };
 
 export const post = async (sub: UUID, email: string): Promise<ProfileType> => {
-  const { data } = await AxiosInstance.post("/profiles", { profileID: sub, email });
-  return data.data;
+  try {
+    const { data } = await AxiosInstance.post("/profiles", { profileID: sub, email });
+    return data.data;
+  } catch (err) {
+    return {} as ProfileType;
+  }
 }
 
 export const update = async (profile: ProfileType): Promise<ProfileType> => {
