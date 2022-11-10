@@ -45,9 +45,7 @@ export default function Layout() {
 
   const seeProfile = async (sub: UUID, email: string): Promise<ProfileType> => {
     let profile = await ProfileAPI.get(sub);
-    if (!profile.profileID) {
-      profile = await ProfileAPI.post(sub, email);
-    }
+    if (!profile.profileID) profile = await ProfileAPI.post(sub, email);
     return profile;
   };
 
