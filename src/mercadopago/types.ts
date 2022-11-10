@@ -202,6 +202,7 @@ export type PaymentIdentificationsType = PaymentIdentificationType[];
 export interface PaymentDataType extends PaymentFormType {
   profileID: UUID;
   eventID: UUID;
+  cardholderName: string;
   installments: number;
   issuer_id: string;
   identification: {

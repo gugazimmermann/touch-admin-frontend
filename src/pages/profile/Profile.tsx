@@ -227,7 +227,6 @@ export default function Profile() {
     form.website = form.website ? normalizeWebsite(form.website || "") : "";
     form.zipCode = form.zipCode ? form.zipCode.replace(/[^\d]/g, "") : "";
     await ProfileAPI.update(form);
-    await MercadoPagoAPI.clientPost(state.profile.profileID);
     await handleLogoAndMap(form);
     loadClient(true);
     setLoading(false);

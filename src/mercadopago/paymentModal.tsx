@@ -178,6 +178,7 @@ const PaymentModal = ({
       identificationNumber: formPayment?.document?.replace(/\D/g, "") || "",
     });
     const paymentData: PaymentDataType = {
+      cardholderName: formPayment?.cardholderName as string,
       installments: Number(formPayment.paymentOption),
       issuer_id: formPayment?.issuer?.id as string,
       identification: {
@@ -192,7 +193,7 @@ const PaymentModal = ({
     const res = await MercadoPagoAPI.paymentPost(paymentData);
     setFormPayment(initialPayment);
     await forceReload();
-    if (res.payment?.status !== "approved") setAlert("Pagamento Recusado, tente novamente.");
+    if (res?.payment?.status !== "approved") setAlert("Não foi possível efetuar o pagamento, tente novamente.");
     setOpen(!open);
     setLoading(false);
   };
